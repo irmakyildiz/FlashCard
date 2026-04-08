@@ -1,3 +1,10 @@
+Mükemmel bir eklenti! Hacettepe İSG sınavı için tam bir "Hap Bilgi" deposu hazırlamışsın. Verdiğin 100 adet özel soru-cevap kartını sisteme entegre ettim. 
+
+"Konu Öğrenme" bölümüne girdiğinde artık sağ üstte kocaman bir **"BİLGİ DESTESİNE BAŞLA"** butonu göreceksin. O butona bastığında, senin yazdığın 100 kartlık özel deste açılacak ve sırayla (Önceki/Sonraki tuşlarıyla) kartları çevirerek çalışabileceksin. Ayrıca önceki sürümde yaptığımız *Kalıcı Hafıza (localStorage)* özelliği aynen duruyor, yani eklediğin kelimeler kaybolmayacak.
+
+Aşağıdaki kodu kopyalayıp `index.html` dosyanın tamamıyla değiştirmen yeterli:
+
+```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -30,7 +37,7 @@
         const { useState, useMemo, useEffect } = React;
 
         // -------------------------
-        // 1. BAŞLANGIÇ KELİME VERİ SETİ
+        // 1. BAŞLANGIÇ KELİME VERİ SETİ (A-S)
         // -------------------------
         const INITIAL_VOCAB_DATA = {
           "A – KİMYASALLAR": [
@@ -530,7 +537,7 @@
         };
 
         // -------------------------
-        // 2. KONU ÖĞRENME VERİ SETİ (PDF'ten Özetler)
+        // 2. KONU ÖĞRENME VERİ SETİ (PDF Özetleri)
         // -------------------------
         const LECTURE_DATA = [
             {
@@ -578,14 +585,120 @@
         ];
 
         // -------------------------
-        // KELİME KARTI BİLEŞENİ
+        // 4. MÜH104 - 100 BİLGİ KARTI VERİ SETİ
+        // -------------------------
+        const INFO_CARDS_DATA = [
+            { q: "Kimyasal madde nedir?", a: "Doğal ortamda bulunan, üretilen veya atık olarak ortaya çıkan; piyasaya arz edilip edilmediğine bakılmaksızın her türlü element, bileşik veya karışımdır." },
+            { q: "Kimyasallar vücuda kaç yoldan girer? Bunlar nelerdir?", a: "3 yoldan: 1) İnhalasyon (solunum), 2) Absorpsiyon (deri/göz emilimi), 3) Yutma (sindirim)" },
+            { q: "Kimyasal tehlikenin boyutunu belirleyen 4 faktör nedir?", a: "1) Fiziksel-kimyasal özellikler, 2) Maruziyet şekli ve süresi, 3) Maruz kalan kişinin özellikleri, 4) Çevresel özellikler (fiziksel ortam)" },
+            { q: "Kimyasal risk önlemlerinde doğru sıralama nedir?", a: "Önce kaynakta → sonra ortamda → en son kişisel önlem (KKD). Kişisel koruyucular son çaredir." },
+            { q: "Kaynakta alınan kimyasal risk önlemlerine 3 örnek ver.", a: "Maddeyi değiştirme (ikame), süreci kapalı sisteme alma, lokal aspirasyon sistemi uygulama" },
+            { q: "Ortamda alınan kimyasal risk önlemleri nelerdir?", a: "İşyeri düzeni ve tertip, genel aspirasyon, dilüsyon aspirasyonu (taze hava sağlama)" },
+            { q: "Kimyasal maddeler depolanırken hangi maddeler yan yana konulmamalıdır?", a: "Birbiriyle reaksiyona (etkileşime) giren kimyasallar aynı depoda yan yana bulundurulmamalıdır." },
+            { q: "Kimyasal depolama alanında mutlaka bulunması gereken 2 şey nedir?", a: "Göz duşu ve Malzeme Güvenlik Bilgi Formu (MGBF/MSDS)" },
+            { q: "MGBF (MSDS) nedir?", a: "Tehlikeli maddelerin özelliklerini ve insan sağlığı ile çevreyi korumak için alınacak güvenlik önlemlerini içeren yasal belgedir." },
+            { q: "MGBF kaç başlıktan oluşur? İlk 4'ünü say.", a: "16 başlık. İlk 4'ü: a) Madde/imalatçı kimliği, b) Tehlike tanımı, c) Bileşim bilgisi, d) İlk yardım önlemleri" },
+            { q: "Gürültü nasıl tanımlanır?", a: "İstenmeyen ve çoğunlukla yapay olarak üretilen rahatsız edici ses; işitme kaybına yol açabilecek ya da sağlığa zararlı tüm sesleri kapsar." },
+            { q: "Normal insan konuşması kaç dB'dir?", a: "60 dB" },
+            { q: "Haftalık gürültü maruziyet limit değeri kaç dB'dir?", a: "87 dB (haftalık ortalama, 8 saat/gün × 5 gün)" },
+            { q: "Günlük çalışmanın 7,5 saati geçemeyeceği gürültü sınırı nedir?", a: "85 dB ve üzeri gürültü düzeylerinde günlük çalışma 7,5 saati aşamaz." },
+            { q: "Aktif teknik gürültü önlemleri nelerdir?", a: "Makinelerde titreşimi azaltacak uygun malzeme kullanımı, düşük gürültülü süreç seçimi ve programlanması, düzenli bakım" },
+            { q: "Pasif teknik gürültü önlemleri nelerdir?", a: "Gürültü kaynağını ses geçirmez duvarlarla kapatmak, ses geçirmez/yansıtmayan malzeme kullanmak, yüksek gürültülü süreçleri uzak alanlara almak" },
+            { q: "Odyometri nedir ve hangi aletle yapılır?", a: "İşitme testi. Odyometre cihazıyla iki kulak için ayrı ayrı, farklı frekanslarda işitme keskinliği ölçülür." },
+            { q: "Titreşim nasıl tanımlanır?", a: "Bir denge noktası etrafında gerçekleşen mekanik salınımdır." },
+            { q: "Titreşimli aletle çalışırken dirsek neden düz tutulmalıdır?", a: "Dirsek ne kadar bükülürse titreşim elten üst kola o kadar fazla aktarılır; düz tutmak bu geçişi azaltır." },
+            { q: "Titreşim Beyaz Parmak Sendromu nedir?", a: "Raynaud Sendromu'nun ikincil formu; sürekli titreşimli alet kullanımından kaynaklanan endüstriyel hastalık. Parmaklarda beyazlaşma, ağrı ve soğukluk görülür. 'Dead Finger' de denir." },
+            { q: "İyi aydınlatmanın 6 özelliğini say.", a: "1) Yeterli yoğunluk, 2) Sabit yoğunluk, 3) İyi dağılım, 4) Gölge oluşturmamalı, 5) Uygun ışık rengi ve yansıma, 6) Göz kamaştırmamalı" },
+            { q: "Yetersiz aydınlatmanın iş güvenliğine etkisi nedir?", a: "Görme verimliliğini azaltır, kazaları artırır, iş kalitesini ve verimini düşürür, ekonomik kayıplara ve araç/yaya güvenlik risklerine yol açar." },
+            { q: "Yapay aydınlatmanın 3 türü nedir?", a: "1) Doğrudan (Direct) – ışık doğrudan çalışma alanına gelir; 2) Dolaylı (Indirect) – yansıyarak gelir; 3) Yarı-doğrudan/Yerel (Semi-direct/Local) – yalnızca çalışma alanını aydınlatır" },
+            { q: "Termal konfor nedir?", a: "Zihnin ısıl ortamdan duyduğu memnuniyeti ifade eden, öznel değerlendirmeyle belirlenen durumdur." },
+            { q: "Termal konforun 3 temel faktörü nedir?", a: "Sıcaklık, nem (humidity) ve hava hızı (air velocity)" },
+            { q: "Ofis çalışması için önerilen hava sıcaklığı aralığı nedir?", a: "19,4°C – 22,8°C" },
+            { q: "İşyerinde ortam sıcaklığı hangi aletle ölçülür?", a: "Kuru (cıvalı) termometre" },
+            { q: "Termal konfor için önerilen bağıl nem oranı nedir?", a: "%70" },
+            { q: "Deniz seviyesi atmosferik basınç kaç mm cıvadır?", a: "760 mm cıva" },
+            { q: "Atmosferik basıncın çok altında veya üstünde çalışmanın insan sağlığına etkisi nedir?", a: "Kalp, dolaşım veya solunum sıkıntısına yol açabilir." },
+            { q: "İyonize radyasyon örnekleri nelerdir?", a: "Kozmik ışınlar, X ışınları, radyoaktif maddelerden gelen radyasyon" },
+            { q: "İyonize olmayan radyasyon örnekleri nelerdir?", a: "Radyant ısı, radyo dalgaları, mikrodalgalar, kızılötesi ışık, görünür ışık, ultraviyole ışık" },
+            { q: "Radyasyondan korunmanın 3 temel yöntemi nedir?", a: "1) SÜRE – mümkün olduğunca kısa (Doz = Doz Yoğunluğu × Süre), 2) MESAFE – mümkün olduğunca büyük, 3) ZIRHLAMA – kaynak ile kişi arasına bariyer koymak" },
+            { q: "Radyasyon yoğunluğu mesafeyle nasıl değişir?", a: "Mesafenin karesiyle ters orantılı olarak azalır. (Mesafe 2 katına çıkarsa yoğunluk ¼'e düşer.)" },
+            { q: "Doğal radyasyon kaynaklarına 3 örnek ver.", a: "Kozmik ışınlar, vücudumuzdaki radyoaktif elementler, radyumun bozunmasıyla oluşan radon gazı" },
+            { q: "Yapay radyasyon kaynaklarına 3 örnek ver.", a: "Tıbbi tanı-tedavi (X ışını), nükleer güç santralleri, atom bombası denemeleri (1950-1960)" },
+            { q: "Ergonomi kelimesinin Yunanca kökenleri nelerdir?", a: "Ergo = İş, Nomos = Bilim/Yasalar → Ergonomi = 'İş Bilimi'" },
+            { q: "Ergonominin 3 temel amacı nedir?", a: "1) Kaza ve yaralanmaları önlemek, 2) Yorgunluğu ve insan vücudunun aşırı kullanımını en aza indirmek, 3) Verimlilik, kalite ve güvenliği en üst düzeye çıkarmak" },
+            { q: "Ergonomi hangi konularla ilgilenir? 5 örnek ver.", a: "Gürültü, aydınlatma, ısı, titreşim, çalışma alanı tasarımı, el aleti tasarımı, sandalye tasarımı, çalışma saatleri, vardiya, mola süreleri" },
+            { q: "Ofisin ısıtıcılarından kaynaklanan aşırı kuru havanın sonuçları nelerdir?", a: "Akciğer bozuklukları, bronşit, nezle, göz ve cilt hastalıkları, kuru göz, cilt döküntüsü, artmış alerjik duyarlılık" },
+            { q: "Bilgisayar monitöründen yayılan negatif yüklü parçacıklar neden zararlıdır?", a: "Vücutta negatif elektrik yükü oluşturur; havanın pozitif yüklü toz parçacıklarını çekerek gözlerde konjonktivite neden olur." },
+            { q: "Işık kaynağının çalışma alanının tam önünde olmasının sonucu nedir?", a: "Göz kamaşması, göz rahatsızlıkları ve baş ağrısına neden olur." },
+            { q: "Yanlış monitör konumu ve pencere yansımalarının etkisi nedir?", a: "Ciddi zihinsel ve algısal yük ile göz gerginliğine neden olur." },
+            { q: "Bel ağrısına karşı yatma önerisi nedir?", a: "Sırtüstü yatılmamalı, çok yüksek yastık kullanılmamalı; dizlerin altına yeterli yükseklikte yastık konulmalıdır." },
+            { q: "Ergonomi eğitimi bel ağrısı sıklığını ve maliyetini ne kadar azaltır?", a: "%50'nin üzerinde azaltır." },
+            { q: "Manuel taşıma nedir?", a: "Yük kaldırma, indirme, itme, çekme, taşıma veya hareket ettirme gibi bel veya sırt yaralanması riski taşıyabilecek işlerdir." },
+            { q: "Manuel taşımada yükle ilgili risk faktörlerinden 'yükün özellikleri' başlığı altında neler sayılır?", a: "Çok ağır/büyük olması, sert veya kavranması güç olması, dengesiz/kaymacı içerik, vücut bükülmesini gerektiren konum, çarpışmada yaralanma riski" },
+            { q: "Manuel taşımada çalışma ortamının hangi özelliği risk oluşturur?", a: "Dar/alçak alan, engebeli/kaygan zemin, elverişsiz yükseklik, zemin seviyesi farkı, kararsız zemin, uygunsuz sıcaklık/nem/havalandırma" },
+            { q: "Manuel taşımada bireysel risk faktörleri nelerdir?", a: "Uygunsuz fiziksel yapı, uygunsuz kıyafet/ayakkabı, yetersiz eğitim veya bilgi eksikliği" },
+            { q: "Yük kaldırmada 'Adım 3 – Uygun Kaldırma Pozisyonu' nasıldır?", a: "Dizleri bük (çok fazla değil), sırtı dik tut (çeneyi içeri çek), yüke hafifçe öne eğil, omuz ve kalça aynı yönde olsun." },
+            { q: "Yük taşırken yük neden vücuda yakın tutulmalıdır?", a: "Yükü vücuda yakın tutmak bel bölgesindeki kolu momenti (torku) azaltarak bel kasları ve diskler üzerindeki yükü düşürür." },
+            { q: "Yük taşırken dönmek gerektiğinde ne yapılmalıdır?", a: "Adım atarak tüm vücut döndürülmeli; yalnızca bel bölgesi bükülüp döndürülmemelidir." },
+            { q: "CE işareti nedir ve kim koyar?", a: "Ürünün AB standartlarına uygunluğunu gösteren işarettir; üretici tarafından ürüne konulur." },
+            { q: "PUWER'ın açılımı nedir ve ne zaman yürürlüğe girmiştir?", a: "Provision and Use of Work Equipment Regulation. 1993'te yürürlüğe girmiş, 1998'de güncellenmiştir." },
+            { q: "PUWER'a göre bakım (maintenance) yükümlülüğü nedir?", a: "İş ekipmanı verimli durumda, verimli çalışır halde ve iyi onarım içinde tutulmalıdır; varsa bakım günlüğü güncel tutulmalıdır." },
+            { q: "PUWER muayene (inspection) ne zaman yapılmak zorundadır?", a: "a) İlk kullanımdan önce kurulumun ardından, b) Yeni bir alanda veya konumda kurulumun ardından" },
+            { q: "CE işaretli makinede acil durdurma ne anlama gelir?", a: "Makineyi anında güvenli bir duruma getirecek 'emergency stop' kontrolü bulunmalıdır." },
+            { q: "Makine değişikliğinde risk değerlendirmesi sonucu 'HAYIR' çıkarsa ne yapılır?", a: "Ekipman üreticisiyle iletişime geçilir; üretici belgeleme ve değişiklik onayı yapar, gerekirse CE işareti yenilenir." },
+            { q: "Bakım sayılan faaliyetler hangileridir?", a: "Ayarlama, servis, yağlama, temizlik, muayene, revizyon, onarım, küçük değişiklikler, yazılım değişiklikleri" },
+            { q: "Büyük değişiklik veya yeniden tasarım bakım mıdır?", a: "Hayır; büyük değişiklikler ve yeniden tasarım bakım kapsamında sayılmaz, risk değerlendirmesi gerektirir." },
+            { q: "Ekranlı araçlarda monitörün başlıca ergonomik gereksinimleri nelerdir?", a: "Titreşimsiz görüntü, kolay ayarlanabilir parlaklık/kontrast, her yöne döndürülebilir ekran, yansımasız yüzey" },
+            { q: "Klavyenin rengi neden mat olmalıdır?", a: "Işığı yansıtmaması için; parlak yüzey göz yorgunluğuna ve yansımalara neden olur." },
+            { q: "Klavye ve fare aynı yükseklikte olmalı; fare klavyenin neresinde olmalıdır?", a: "Fareyi klavyenin yanına yerleştirmek gerekir; her ikisi de aynı düzlemde olmalıdır." },
+            { q: "Fare kullanırken bilek nasıl tutulmalıdır?", a: "Bilek düz ve düzgün bir hatta tutulmalı; sağa veya sola bükülmemelidir." },
+            { q: "Ekranlı araç çalışmasında kesintisiz klavye kullanımı en fazla kaç dakika olmalıdır?", a: "40 dakika; bu süreden sonra mola verilmelidir." },
+            { q: "20-20-20 benzeri göz dinlendirme kuralı ne diyor?", a: "Her 20 dakikada bir gözler ekrandan uzaklaştırılarak uzak bir noktaya odaklanılmalı; ardından 10-15 saniye gözler kapalı tutularak dinlendirilmelidir." },
+            { q: "Ekranlı araç çalışmasında hangi 6 tür sağlık riski görülür?", a: "1) Kas-iskelet hastalıkları, 2) Göz sorunları, 3) Sinir sistemi bozuklukları, 4) Dolaşım sistemi bozuklukları, 5) Psikolojik bozukluklar, 6) Sindirim sistemi bozuklukları" },
+            { q: "Monitörden gelen ışık yansıması ve titremesi hangi sağlık sorununa yol açar?", a: "Ciddi zihinsel/algısal yük ve göz gerginliğine; miyopi ve astigmat gibi bozuklukların derecesinin artmasına neden olabilir." },
+            { q: "Ofis ortamındaki risk faktörlerinden biri olan 'tekrarlama' nasıl tanımlanır?", a: "Klavye veya bir aleti günlük 4 saatten fazla kesintisiz kullanmak tekrarlama risk faktörü sayılır." },
+            { q: "Çalışma sandalyesinin hangi özelliklere sahip olması gerekir?", a: "Stabil ve hareketli, yüksekliği ayarlanabilir, öne-arkaya/yukarı-aşağıya ayarlanabilir sırt desteği, bel desteği sağlayan esnek yapı, gerektiğinde ayak desteği" },
+            { q: "Elektrik nedir?", a: "Elektrik yüküne sahip maddenin varlığı ve hareketiyle ilişkili fiziksel olgular bütünüdür." },
+            { q: "Elektrik akımının birimi nedir?", a: "Amper (A)" },
+            { q: "Doğru akım (DC) ve Alternatif akım (AC) arasındaki temel fark nedir?", a: "DC'de akımın yönü ve büyüklüğü zamanla değişmez; AC'de ise zamanla değişir. Pil DC'nin, ev elektriği AC'nin klasik örneğidir." },
+            { q: "Alçak gerilim ve yüksek gerilim sınırı nedir?", a: "Alçak gerilim: faz-faz gerilimi 1000 V ve altı. Yüksek gerilim: 1000 V üzeri." },
+            { q: "Elektrik sigortası nasıl çalışır?", a: "Devreden geçen akım belirli değeri aşınca sigortanın metal tel/şeridi erir ve devre açılır (kesilir)." },
+            { q: "Kaçak Akım Şalteri (RCCB) neden kullanılır?", a: "Gidiş ve dönüş iletkenlerindeki akım dengesizliğini (kaçak akımı) algılayarak devreyi anında keser; elektrik çarpmasına karşı koruma sağlar." },
+            { q: "Elektrik akımının insan vücuduna 4 temel etkisi nedir?", a: "1) Kasılma (kas kasılması, solunum durabilir), 2) Kalp (kardiyak arrest, kalp kası hasarı), 3) Sıcaklık (cilt yanıkları), 4) Düşme (yüksekten çalışanlarda)" },
+            { q: "Elektrik çarpan bir kişi neden kendiliğinden çarpan yerden ayrılamaz?", a: "Akım kasların kasılmasına neden olur; bu yüzden kişi tutunduğu yeri bırakamaz." },
+            { q: "Elektrik çarpması durumunda ilk yapılacak 3 şey nedir?", a: "1) Sigortayı keserek elektriği kes, 2) Lastik tabanlı ayakkabı giy ve kuru lastik eldiven tak, 3) Kişiyle temas etmeden önce iletken nesneleri yalıtım çubuğuyla uzaklaştır." },
+            { q: "Elektrik çarpan kişiye çıplak elle dokunmak neden tehlikelidir?", a: "Kurtarıcı da elektriğe kapılır; gerilim kesilmeden temas kurulmamalıdır." },
+            { q: "Elektrik iş kazalarının en sık nedenleri nelerdir? 3'ünü say.", a: "Yetersiz eğitim, yetersiz/bozuk yalıtım, KKD kullanmama, aşırı özgüven, kalitesiz malzeme, yetkisiz arıza müdahalesi" },
+            { q: "'Sigortayı yeniden sarmak' neden yasaktır?", a: "Sigortayı sararak onarmak, aşırı akımı sınırlayan güvenliği ortadan kaldırır ve yangın/çarpma riskini artırır; otomatik sigorta kullanılmalıdır." },
+            { q: "Portatif uzatma kablosu kullanılmadığında yapılmaması gerekenler nelerdir?", a: "Prizde takılı bırakılmamalı, yerde bırakılmamalı, ek kablo eklenmemeli, hasarlı/ezilmiş kablo kullanılmamalı." },
+            { q: "Elektrik panosunun önüne neden hiçbir şey konulmamalıdır?", a: "Acil durumda panoya hızlı erişimi engelleyen her nesne hayati tehlike oluşturabilir." },
+            { q: "Elektrik bakım-onarım öncesinde alınacak ilk önlem nedir?", a: "Ekipman enerji kaynağından bağlantısı kesilmeli; akımı kesen şalterlerin kapalı kaldığı ve kilitli olduğu sağlanmalıdır." },
+            { q: "Elektrikle ilgili çalışmada topraklı fiş neden kullanılmalıdır?", a: "Topraklama, kaçak akımı güvenle toprağa iletir ve kişinin çarpılmasını önler." },
+            { q: "El aletlerinin yalıtımlı olması ne anlama gelir?", a: "Kerpeten, tornavida gibi aletlerin sapları elektriği iletmeyen (yalıtkan) malzemeyle kaplanmış olması; akımın kullanıcıya geçmesini engeller." },
+            { q: "Güç aletleri hangi durumlarda kullanılmamalıdır?", a: "Hasarlı topraklama, aşırı kıvılcım, hasarlı priz/fiş/şalter veya bağlantı kablosu varsa kullanılmamalıdır." },
+            { q: "Elektrik çarpmasında 112'yi aramak dışında yapılacak ilk müdahale adımlarını sırala.", a: "1) Elektriği kes (sigorta), 2) Kişiye yaklaşmadan önce yalıtım sağla (ayakkabı, eldiven), 3) Kişiyi kıyafetinden tutarak çek, 4) İlk yardım uygula, 5) 112'yi ara" },
+            { q: "İşyeri aydınlatma mevzuatına göre temel ilke nedir?", a: "İşyerleri yeterli doğal ışıkla aydınlatılmalıdır; yetersiz kalınca veya gece vardiyasında yapay aydınlatma sağlanmalıdır." },
+            { q: "Kimyasal madde kaplarında neden etiket zorunludur?", a: "Maddenin kimliğini, tehlikelerini ve güvenlik bilgilerini bildirmek için; etiketsiz kap kullanımı ciddi güvenlik riski ve yasal ihlal oluşturur." },
+            { q: "Hafif fiziksel çalışma için önerilen ortam sıcaklığı nedir?", a: "18,3°C" },
+            { q: "Ağır endüstriyel çalışma için önerilen ortam sıcaklığı aralığı nedir?", a: "12,8°C – 15,6°C" },
+            { q: "Titreşimli alet kullanırken aleti ne kadar sıkı tutmak uygundur?", a: "Mümkün olduğunca gevşek tutulmalıdır; sıkı kavramak el-kol titreşim maruziyetini artırır." },
+            { q: "Kimyasal maddenin 'ikame' yoluyla değiştirilmesi ne anlama gelir?", a: "Tehlikeli bir kimyasalın daha az tehlikeli veya tehlikesiz bir maddeyle değiştirilmesidir; kaynakta alınan en etkin önlemdir." },
+            { q: "MGBF'de 'toksikolojik bilgi' başlığı ne içerir?", a: "Maddenin organizmaları nasıl etkilediğine dair bilgileri (zehirlilik, etki yolları, akut/kronik etkiler vb.)" },
+            { q: "Kaçak Akım Şalteri aylık olarak ne için kontrol edilmelidir?", a: "Cihazın çalışır durumda olduğunu doğrulamak için; işlev görmeyen bir şalter elektrik çarpmalarına karşı koruma sağlamaz." },
+            { q: "Radyasyon korumasının amacı nedir?", a: "İnsanlar için uygun koruma düzeyini sağlamak ve zararlı etkilerin (özellikle kanser, genetik bozukluk) oluşmasını önlemektir." },
+            { q: "Ergonomi eğitiminin bel ağrısı üzerindeki kanıtlanmış etkisi nedir?", a: "Ergonomi eğitimi ve iyileştirmelerinin bel ağrısı sıklığını ve maliyetini %50'nin üzerinde azalttığı bilimsel olarak gösterilmiştir." },
+            { q: "İş sağlığı ve güvenliği çerçevesinde KKD'nin yeri nedir?", a: "KKD (Kişisel Koruyucu Donanım) en son başvurulacak önlemdir. Önce kaynakta, sonra ortamda önlemler alınmalı; yeterli olmadığında KKD devreye girmelidir. Ancak gerektiğinde kullanımı zorunludur." }
+        ];
+
+        // -------------------------
+        // SÖZLÜK KELİME KARTI BİLEŞENİ
         // -------------------------
         const FlashCard = ({ item, isFlipped, onClick, isLarge = false, onDelete }) => {
           const height = isLarge ? "h-64 md:h-80" : "h-52 md:h-60";
           return (
             <div className={`perspective-1000 w-full ${height} cursor-pointer relative group`} onClick={onClick}>
               
-              {/* SİLME BUTONU (Sadece onDelete prop'u gönderildiğinde görünür) */}
+              {/* SİLME BUTONU */}
               {onDelete && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -624,7 +737,7 @@
           // LOCAL STORAGE BAĞLANTILARI (KALICI HAFIZA)
           // ==========================================
           
-          // 1. KELİME LİSTESİNİ HAFIZADAN ÇEK VE KAYDET
+          // 1. KELİME LİSTESİ
           const [vocabData, setVocabData] = useState(() => {
             const savedData = localStorage.getItem('isg_vocab_data');
             return savedData ? JSON.parse(savedData) : INITIAL_VOCAB_DATA;
@@ -634,7 +747,7 @@
             localStorage.setItem('isg_vocab_data', JSON.stringify(vocabData));
           }, [vocabData]);
 
-          // 2. TEST SORULARINI HAFIZADAN ÇEK VE KAYDET
+          // 2. TEST SORULARI
           const [customQuestions, setCustomQuestions] = useState(() => {
             const savedQs = localStorage.getItem('isg_custom_questions');
             return savedQs ? JSON.parse(savedQs) : INITIAL_QUIZ_QUESTIONS;
@@ -644,7 +757,6 @@
             localStorage.setItem('isg_custom_questions', JSON.stringify(customQuestions));
           }, [customQuestions]);
 
-
           // ---- YENİ KELİME EKLEME STATE'LERİ ----
           const [newWordEn, setNewWordEn] = useState("");
           const [newWordTr, setNewWordTr] = useState("");
@@ -652,6 +764,11 @@
           // ---- ÖĞRENME MODU (Kart Destesi) State'leri ----
           const [flashcardDeck, setFlashcardDeck] = useState([]);
           const [isFlashcardFlipped, setIsFlashcardFlipped] = useState(false);
+
+          // ---- 100 BİLGİ KARTI MODU State'leri ----
+          const [activeInfoDeck, setActiveInfoDeck] = useState(false);
+          const [infoIndex, setInfoIndex] = useState(0);
+          const [isInfoFlipped, setIsInfoFlipped] = useState(false);
 
           // ---- TEST MODU State'leri ----
           const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -703,7 +820,7 @@
               });
           };
 
-          // --- ÖĞRENME MODU FONKSİYONLARI ---
+          // --- SÖZLÜK ÖĞRENME MODU FONKSİYONLARI ---
           const startFlashcardQuiz = () => {
             const all = Object.values(vocabData).flat().sort(() => Math.random() - 0.5);
             setFlashcardDeck(all);
@@ -784,16 +901,16 @@
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
                     {/* MOD BUTONLARI */}
                     <div className="space-y-2">
-                        <button onClick={() => setView('cards')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'cards' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                        <button onClick={() => {setView('cards'); setActiveInfoDeck(false);}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'cards' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                             <i className="fa-solid fa-layer-group w-5"></i> Kelime Kartları
                         </button>
-                        <button onClick={startFlashcardQuiz} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'quiz' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-brain w-5"></i> Öğrenme Modu
+                        <button onClick={() => {startFlashcardQuiz(); setActiveInfoDeck(false);}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'quiz' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-brain w-5"></i> Sözlük Pratiği
                         </button>
                         <button onClick={() => setView('learn')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'learn' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                             <i className="fa-solid fa-book-open w-5"></i> Konu Öğrenme
                         </button>
-                        <button onClick={() => {setView('test'); resetTest();}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                        <button onClick={() => {setView('test'); resetTest(); setActiveInfoDeck(false);}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                             <i className="fa-solid fa-pen-to-square w-5"></i> Test Çöz
                         </button>
                     </div>
@@ -822,14 +939,12 @@
                     
                     {/* ARAMA VE EKLEME KISMI */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Arama */}
                         <div className="relative group">
                           <i className="fa-solid fa-magnifying-glass absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
                           <input type="text" placeholder="Kelime ara..." value={search} onChange={(e) => setSearch(e.target.value)}
                             className="w-full h-full p-5 pl-14 rounded-3xl border border-slate-200 shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg" />
                         </div>
 
-                        {/* Yeni Kelime Ekleme Formu */}
                         <form onSubmit={handleAddWord} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
                             <div className="flex-1 flex flex-col gap-2">
                                 <input type="text" placeholder="İngilizce (Örn: Safety)" value={newWordEn} onChange={e=>setNewWordEn(e.target.value)} className="w-full p-2 px-3 rounded-xl border border-slate-100 bg-slate-50 text-sm outline-none focus:border-blue-300" required />
@@ -843,10 +958,9 @@
 
                     <div className="flex items-center justify-between border-b pb-2">
                         <h2 className="text-xl font-black text-slate-700">{search ? "Arama Sonuçları" : activeCat}</h2>
-                        <span className="text-slate-400 text-sm font-bold">{filteredList.length} Terim (Hafızada Kayıtlı)</span>
+                        <span className="text-slate-400 text-sm font-bold">{filteredList.length} Terim</span>
                     </div>
 
-                    {/* KARTLAR */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                       {filteredList.map((item, i) => (
                         <FlashCard 
@@ -861,7 +975,7 @@
                   </div>
                 )}
 
-                {/* MOD 2: ÖĞRENME MODU (Flashcard Quiz - Biliyorum/Bilemedim) */}
+                {/* MOD 2: SÖZLÜK ÖĞRENME MODU */}
                 {view === 'quiz' && (
                   flashcardDeck.length > 0 ? (
                     <div className="max-w-xl mx-auto space-y-8">
@@ -887,29 +1001,77 @@
                   )
                 )}
 
-                {/* MOD 3: KONU ÖĞRENME (PDF ÖZETLERİ) */}
+                {/* MOD 3: KONU ÖĞRENME (100 Bilgi Kartı + PDF Özetleri) */}
                 {view === 'learn' && (
-                    <div className="max-w-4xl mx-auto space-y-8">
-                        <h2 className="text-3xl font-black text-slate-800 border-b-4 border-amber-500 inline-block pb-2">Ders Notları Özetleri</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {LECTURE_DATA.map((lec, i) => (
-                                <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                                    <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
-                                        <i className="fa-solid fa-bookmark"></i>
+                    activeInfoDeck ? (
+                        <div className="max-w-2xl mx-auto space-y-6">
+                            <div className="flex justify-between items-center text-slate-500 font-bold">
+                                <span>100 Bilgi Kartı: Soru {infoIndex + 1} / {INFO_CARDS_DATA.length}</span>
+                                <button onClick={() => {setActiveInfoDeck(false); setInfoIndex(0); setIsInfoFlipped(false);}} className="hover:text-red-500">
+                                    Çıkış <i className="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            
+                            <div className="perspective-1000 w-full h-96 cursor-pointer" onClick={() => setIsInfoFlipped(!isInfoFlipped)}>
+                                <div className={`relative w-full h-full transition-all duration-500 preserve-3d ${isInfoFlipped ? 'rotate-y-180' : ''}`}>
+                                    {/* Ön Yüz (Soru) */}
+                                    <div className="absolute inset-0 bg-white border-2 border-amber-200 rounded-3xl shadow-md flex flex-col items-center justify-center p-8 backface-hidden">
+                                        <span className="text-amber-500 text-sm font-bold uppercase mb-6 tracking-widest">Soru / Kavram</span>
+                                        <h3 className="text-2xl md:text-3xl font-bold text-slate-800 text-center leading-snug">{INFO_CARDS_DATA[infoIndex].q}</h3>
+                                        <p className="text-slate-400 text-sm mt-8 animate-pulse"><i className="fa-solid fa-rotate"></i> Cevap için tıkla</p>
                                     </div>
-                                    <h3 className="text-xl font-bold text-slate-800 mb-3">{lec.title}</h3>
-                                    <p className="text-slate-600 leading-relaxed text-sm">{lec.content}</p>
+                                    {/* Arka Yüz (Cevap) */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 rotate-y-180 backface-hidden text-white">
+                                        <span className="text-amber-100 text-sm font-bold uppercase mb-6 tracking-widest">Cevap / Açıklama</span>
+                                        <h3 className="text-xl md:text-2xl font-bold text-center leading-relaxed">{INFO_CARDS_DATA[infoIndex].a}</h3>
+                                    </div>
                                 </div>
-                            ))}
+                            </div>
+
+                            <div className="flex justify-between gap-4 mt-4">
+                                <button 
+                                    onClick={() => {if(infoIndex > 0) {setInfoIndex(infoIndex-1); setIsInfoFlipped(false);}}} 
+                                    disabled={infoIndex === 0} 
+                                    className="flex-1 bg-slate-200 p-5 rounded-2xl font-bold text-slate-600 disabled:opacity-50 hover:bg-slate-300 transition-colors"
+                                >
+                                    <i className="fa-solid fa-arrow-left"></i> Önceki
+                                </button>
+                                <button 
+                                    onClick={() => {if(infoIndex < INFO_CARDS_DATA.length - 1) {setInfoIndex(infoIndex+1); setIsInfoFlipped(false);}}} 
+                                    disabled={infoIndex === INFO_CARDS_DATA.length - 1} 
+                                    className="flex-1 bg-amber-500 p-5 rounded-2xl font-bold text-white disabled:opacity-50 hover:bg-amber-600 transition-colors"
+                                >
+                                    Sonraki <i className="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="max-w-4xl mx-auto space-y-8">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-amber-500 pb-4">
+                                <h2 className="text-3xl font-black text-slate-800">Ders Notları Özetleri</h2>
+                                <button onClick={() => setActiveInfoDeck(true)} className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-amber-600 transition-colors flex items-center gap-2">
+                                    <i className="fa-solid fa-layer-group"></i> 100 BİLGİ DESTESİNE BAŞLA
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {LECTURE_DATA.map((lec, i) => (
+                                    <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
+                                            <i className="fa-solid fa-bookmark"></i>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-slate-800 mb-3">{lec.title}</h3>
+                                        <p className="text-slate-600 leading-relaxed text-sm">{lec.content}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )
                 )}
 
                 {/* MOD 4: TEST (QUIZ) ve SORU EKLEME */}
                 {view === 'test' && (
                     <div className="max-w-3xl mx-auto space-y-8">
                         
-                        {/* Test Çözme Alanı */}
                         <div className="bg-white p-8 rounded-3xl shadow-md border border-slate-100">
                             {!showTestResult ? (
                                 <div>
@@ -954,7 +1116,6 @@
                             )}
                         </div>
 
-                        {/* Manuel Soru Ekleme Formu */}
                         <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200">
                             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                                 <i className="fa-solid fa-circle-plus text-blue-600"></i> Kendi Sorunu Ekle (Hafızaya Kaydolur)
@@ -995,3 +1156,4 @@
     </script>
 </body>
 </html>
+```
