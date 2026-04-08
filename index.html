@@ -30,9 +30,9 @@
         const { useState, useMemo, useEffect } = React;
 
         // -------------------------
-        // 1. KELİME VERİ SETİ
+        // 1. BAŞLANGIÇ KELİME VERİ SETİ
         // -------------------------
-        const VOCAB_DATA = {
+        const INITIAL_VOCAB_DATA = {
           "A – KİMYASALLAR": [
             { en: "chemical substance", tr: "kimyasal madde" },
             { en: "element", tr: "element, unsur" },
@@ -580,10 +580,22 @@
         // -------------------------
         // KELİME KARTI BİLEŞENİ
         // -------------------------
-        const FlashCard = ({ item, isFlipped, onClick, isLarge = false }) => {
+        const FlashCard = ({ item, isFlipped, onClick, isLarge = false, onDelete }) => {
           const height = isLarge ? "h-64 md:h-80" : "h-52 md:h-60";
           return (
-            <div className={`perspective-1000 w-full ${height} cursor-pointer`} onClick={onClick}>
+            <div className={`perspective-1000 w-full ${height} cursor-pointer relative group`} onClick={onClick}>
+              
+              {/* SİLME BUTONU (Sadece onDelete prop'u gönderildiğinde görünür) */}
+              {onDelete && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                  className="absolute top-3 right-3 z-10 bg-red-100 text-red-500 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white shadow-sm"
+                  title="Kelimeyi Sil"
+                >
+                  <i className="fa-solid fa-trash"></i>
+                </button>
+              )}
+
               <div className={`relative w-full h-full transition-all duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                 <div className="absolute inset-0 bg-white border-2 border-slate-100 rounded-2xl shadow-sm flex flex-col items-center justify-center p-6 backface-hidden">
                   <span className="text-slate-400 text-[10px] font-bold uppercase mb-4 tracking-widest">English</span>
@@ -603,18 +615,45 @@
         // ANA UYGULAMA (APP)
         // -------------------------
         const App = () => {
-          // view modları: 'cards', 'quiz', 'learn', 'test'
           const [view, setView] = useState('cards'); 
           const [activeCat, setActiveCat] = useState("A – KİMYASALLAR");
           const [search, setSearch] = useState("");
           const [flippedStates, setFlippedStates] = useState({});
+
+          // ==========================================
+          // LOCAL STORAGE BAĞLANTILARI (KALICI HAFIZA)
+          // ==========================================
+          
+          // 1. KELİME LİSTESİNİ HAFIZADAN ÇEK VE KAYDET
+          const [vocabData, setVocabData] = useState(() => {
+            const savedData = localStorage.getItem('isg_vocab_data');
+            return savedData ? JSON.parse(savedData) : INITIAL_VOCAB_DATA;
+          });
+
+          useEffect(() => {
+            localStorage.setItem('isg_vocab_data', JSON.stringify(vocabData));
+          }, [vocabData]);
+
+          // 2. TEST SORULARINI HAFIZADAN ÇEK VE KAYDET
+          const [customQuestions, setCustomQuestions] = useState(() => {
+            const savedQs = localStorage.getItem('isg_custom_questions');
+            return savedQs ? JSON.parse(savedQs) : INITIAL_QUIZ_QUESTIONS;
+          });
+
+          useEffect(() => {
+            localStorage.setItem('isg_custom_questions', JSON.stringify(customQuestions));
+          }, [customQuestions]);
+
+
+          // ---- YENİ KELİME EKLEME STATE'LERİ ----
+          const [newWordEn, setNewWordEn] = useState("");
+          const [newWordTr, setNewWordTr] = useState("");
 
           // ---- ÖĞRENME MODU (Kart Destesi) State'leri ----
           const [flashcardDeck, setFlashcardDeck] = useState([]);
           const [isFlashcardFlipped, setIsFlashcardFlipped] = useState(false);
 
           // ---- TEST MODU State'leri ----
-          const [customQuestions, setCustomQuestions] = useState(INITIAL_QUIZ_QUESTIONS);
           const [currentQIndex, setCurrentQIndex] = useState(0);
           const [score, setScore] = useState(0);
           const [showTestResult, setShowTestResult] = useState(false);
@@ -625,19 +664,48 @@
           const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
           const [newQAnswerIndex, setNewQAnswerIndex] = useState(0);
 
+          // Dinamik Filtreleme
           const filteredList = useMemo(() => {
             if (search) {
-              return Object.values(VOCAB_DATA).flat().filter(w => 
+              return Object.values(vocabData).flat().filter(w => 
                 w.en.toLowerCase().includes(search.toLowerCase()) || 
                 w.tr.toLowerCase().includes(search.toLowerCase())
               );
             }
-            return VOCAB_DATA[activeCat] || [];
-          }, [search, activeCat]);
+            return vocabData[activeCat] || [];
+          }, [search, activeCat, vocabData]);
+
+          // --- KELİME EKLEME VE SİLME FONKSİYONLARI ---
+          const handleAddWord = (e) => {
+              e.preventDefault();
+              if (!newWordEn.trim() || !newWordTr.trim()) return;
+
+              setVocabData(prev => {
+                  const newData = { ...prev };
+                  newData[activeCat] = [{ en: newWordEn, tr: newWordTr }, ...newData[activeCat]];
+                  return newData;
+              });
+
+              setNewWordEn("");
+              setNewWordTr("");
+              alert(`"${newWordEn}" kelimesi ${activeCat} kategorisine eklendi ve kaydedildi!`);
+          };
+
+          const handleDeleteWord = (wordEn, wordTr) => {
+              if(!window.confirm(`"${wordEn}" kelimesini silmek istediğinize emin misiniz?`)) return;
+
+              setVocabData(prev => {
+                  const newData = { ...prev };
+                  for (let cat in newData) {
+                      newData[cat] = newData[cat].filter(w => w.en !== wordEn || w.tr !== wordTr);
+                  }
+                  return newData;
+              });
+          };
 
           // --- ÖĞRENME MODU FONKSİYONLARI ---
           const startFlashcardQuiz = () => {
-            const all = Object.values(VOCAB_DATA).flat().sort(() => Math.random() - 0.5);
+            const all = Object.values(vocabData).flat().sort(() => Math.random() - 0.5);
             setFlashcardDeck(all);
             setView('quiz');
             setIsFlashcardFlipped(false);
@@ -648,7 +716,6 @@
             setTimeout(() => {
               setFlashcardDeck(prev => {
                 const rest = prev.slice(1);
-                // Bilirse at, bilemezse destenin sonuna ekle
                 return known ? rest : [...rest, prev[0]];
               });
             }, 200);
@@ -678,7 +745,7 @@
             setSelectedOption(null);
           };
 
-          // --- SORU EKLEME FONKSİYONLARI ---
+          // --- TEST İÇİN MANUEL SORU EKLEME FONKSİYONLARI ---
           const handleAddQuestion = (e) => {
             e.preventDefault();
             if (!newQText || newQOptions.some(opt => opt.trim() === "")) {
@@ -691,7 +758,7 @@
                 answer: newQOptions[newQAnswerIndex]
             };
             setCustomQuestions([...customQuestions, newQuestion]);
-            alert("Soru başarıyla eklendi!");
+            alert("Soru başarıyla kaydedildi!");
             setNewQText("");
             setNewQOptions(["", "", "", ""]);
             setNewQAnswerIndex(0);
@@ -735,7 +802,7 @@
                     {view === 'cards' && (
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest border-t pt-4">KATEGORİLER</p>
-                            {Object.keys(VOCAB_DATA).map(c => (
+                            {Object.keys(vocabData).map(c => (
                             <button key={c} onClick={() => { setActiveCat(c); setSearch(""); }}
                                 className={`w-full text-left p-3 rounded-xl text-sm mb-1 transition-all ${activeCat === c ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}>
                                 {c}
@@ -749,17 +816,46 @@
               {/* ANA İÇERİK */}
               <main className="flex-1 p-6 md:p-12">
                 
-                {/* MOD 1: KELİME KARTLARI (Galeri) */}
+                {/* MOD 1: KELİME KARTLARI (Galeri + Ekleme Formu) */}
                 {view === 'cards' && (
-                  <div className="max-w-5xl mx-auto space-y-10">
-                    <div className="relative group">
-                      <i className="fa-solid fa-magnifying-glass absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
-                      <input type="text" placeholder="Kelime ara (English / Türkçe)..." value={search} onChange={(e) => setSearch(e.target.value)}
-                        className="w-full p-5 pl-14 rounded-3xl border-none shadow-xl shadow-slate-200/50 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg" />
+                  <div className="max-w-5xl mx-auto space-y-8">
+                    
+                    {/* ARAMA VE EKLEME KISMI */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Arama */}
+                        <div className="relative group">
+                          <i className="fa-solid fa-magnifying-glass absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
+                          <input type="text" placeholder="Kelime ara..." value={search} onChange={(e) => setSearch(e.target.value)}
+                            className="w-full h-full p-5 pl-14 rounded-3xl border border-slate-200 shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg" />
+                        </div>
+
+                        {/* Yeni Kelime Ekleme Formu */}
+                        <form onSubmit={handleAddWord} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1 flex flex-col gap-2">
+                                <input type="text" placeholder="İngilizce (Örn: Safety)" value={newWordEn} onChange={e=>setNewWordEn(e.target.value)} className="w-full p-2 px-3 rounded-xl border border-slate-100 bg-slate-50 text-sm outline-none focus:border-blue-300" required />
+                                <input type="text" placeholder="Türkçe (Örn: Güvenlik)" value={newWordTr} onChange={e=>setNewWordTr(e.target.value)} className="w-full p-2 px-3 rounded-xl border border-slate-100 bg-slate-50 text-sm outline-none focus:border-blue-300" required />
+                            </div>
+                            <button type="submit" className="bg-blue-600 text-white px-6 rounded-2xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                <i className="fa-solid fa-plus"></i> Ekle
+                            </button>
+                        </form>
                     </div>
+
+                    <div className="flex items-center justify-between border-b pb-2">
+                        <h2 className="text-xl font-black text-slate-700">{search ? "Arama Sonuçları" : activeCat}</h2>
+                        <span className="text-slate-400 text-sm font-bold">{filteredList.length} Terim (Hafızada Kayıtlı)</span>
+                    </div>
+
+                    {/* KARTLAR */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                       {filteredList.map((item, i) => (
-                        <FlashCard key={i} item={item} isFlipped={flippedStates[i]} onClick={() => setFlippedStates(prev => ({...prev, [i]: !prev[i]}))} />
+                        <FlashCard 
+                          key={i} 
+                          item={item} 
+                          isFlipped={flippedStates[i]} 
+                          onClick={() => setFlippedStates(prev => ({...prev, [i]: !prev[i]}))}
+                          onDelete={() => handleDeleteWord(item.en, item.tr)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -781,9 +877,12 @@
                     </div>
                   ) : (
                     <div className="text-center py-20">
-                        <h2 className="text-4xl font-black mb-4">Şampiyon! 🏆</h2>
-                        <p className="text-slate-500 mb-6">Tüm kelimeleri bitirdin.</p>
-                        <button onClick={() => setView('cards')} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Kartlara Geri Dön</button>
+                        <div className="w-24 h-24 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                            <i className="fa-solid fa-crown"></i>
+                        </div>
+                        <h2 className="text-4xl font-black mb-4 text-slate-800">Şampiyon!</h2>
+                        <p className="text-slate-500 mb-6">Eklediğin yeni kelimeler dahil tüm desteyi bitirdin.</p>
+                        <button onClick={() => setView('cards')} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">Kartlara Geri Dön</button>
                     </div>
                   )
                 )}
@@ -858,7 +957,7 @@
                         {/* Manuel Soru Ekleme Formu */}
                         <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200">
                             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <i className="fa-solid fa-circle-plus text-blue-600"></i> Kendi Sorunu Ekle
+                                <i className="fa-solid fa-circle-plus text-blue-600"></i> Kendi Sorunu Ekle (Hafızaya Kaydolur)
                             </h3>
                             <form onSubmit={handleAddQuestion} className="space-y-4">
                                 <div>
@@ -870,7 +969,7 @@
                                         <div key={i}>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Şık {String.fromCharCode(65 + i)}</label>
                                             <div className="flex items-center gap-2">
-                                                <input type="radio" name="correctAnswer" checked={newQAnswerIndex === i} onChange={() => setNewQAnswerIndex(i)} className="w-5 h-5 text-blue-600" />
+                                                <input type="radio" name="correctAnswer" checked={newQAnswerIndex === i} onChange={() => setNewQAnswerIndex(i)} className="w-5 h-5 text-blue-600 cursor-pointer" />
                                                 <input required type="text" value={opt} onChange={(e) => handleOptionChange(i, e.target.value)} className="w-full p-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder={`Şık ${String.fromCharCode(65 + i)}...`} />
                                             </div>
                                         </div>
