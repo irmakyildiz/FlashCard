@@ -1,0 +1,834 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, BookOpen, Layers, RotateCw, Brain, CheckCircle2, XCircle, RefreshCcw, Info } from 'lucide-react';
+
+const VOCAB_DATA = {
+  "A – KİMYASALLAR": [
+    { en: "chemical substance", tr: "kimyasal madde" },
+    { en: "element", tr: "element, unsur" },
+    { en: "compound", tr: "bileşik" },
+    { en: "mixture", tr: "karışım" },
+    { en: "waste", tr: "atık" },
+    { en: "placed on the market", tr: "piyasaya arz edilen" },
+    { en: "regardless of", tr: "bakılmaksızın, fark etmeksizin" },
+    { en: "hazardous", tr: "tehlikeli" },
+    { en: "hazardous chemical", tr: "tehlikeli kimyasal" },
+    { en: "acute", tr: "akut, ani başlangıçlı" },
+    { en: "chronic", tr: "kronik, uzun süreli" },
+    { en: "harm", tr: "zarar, hasar" },
+    { en: "damage", tr: "hasar, hasar vermek" },
+    { en: "environment", tr: "çevre" },
+    { en: "health", tr: "sağlık" },
+    { en: "safety", tr: "güvenlik" },
+    { en: "exposure", tr: "maruziyet" },
+    { en: "duration of exposure", tr: "maruziyet süresi" },
+    { en: "properties", tr: "özellikler" },
+    { en: "physical and chemical properties", tr: "fiziksel ve kimyasal özellikler" },
+    { en: "characteristics", tr: "özellikler, nitelikler" },
+    { en: "pesticides", tr: "böcek ilaçları, pestisitler" },
+    { en: "regulation", tr: "yönetmelik" }
+  ],
+  "B – VÜCUDA GİRİŞ YOLLARI": [
+    { en: "inhalation", tr: "soluma, inhalasyon" },
+    { en: "absorption", tr: "emilim, absorpsiyon" },
+    { en: "ingestion", tr: "yutma, sindirim yoluyla alma" },
+    { en: "skin", tr: "deri" },
+    { en: "airway", tr: "hava yolu" }
+  ],
+  "C – RİSK ÖNLEMLERİ": [
+    { en: "risk measure", tr: "risk önlemi" },
+    { en: "substitution", tr: "ikame, değiştirme" },
+    { en: "closed system", tr: "kapalı sistem" },
+    { en: "local exhaust ventilation", tr: "lokal aspirasyon / havalandırma sistemi" },
+    { en: "aspiration", tr: "aspirasyon, çekme" },
+    { en: "dilution", tr: "seyreltme" },
+    { en: "fresh air", tr: "taze hava" },
+    { en: "personal protective equipment (PPE)", tr: "kişisel koruyucu donanım (KKD)" },
+    { en: "goggles", tr: "koruyucu gözlük" },
+    { en: "mask", tr: "maske" },
+    { en: "gloves", tr: "eldiven" },
+    { en: "hard hat", tr: "baret" },
+    { en: "chemical hazard", tr: "kimyasal tehlike" },
+    { en: "awareness", tr: "farkındalık" },
+    { en: "periodic maintenance", tr: "periyodik bakım" },
+    { en: "continuous", tr: "sürekli" },
+    { en: "layout", tr: "düzen, yerleşim" }
+  ],
+  "D – DEPOLAMA": [
+    { en: "storage", tr: "depolama" },
+    { en: "storage rack", tr: "depolama rafı" },
+    { en: "spill", tr: "dökülme" },
+    { en: "spill prevention", tr: "dökülme önleme" },
+    { en: "interacting chemicals", tr: "birbiriyle reaksiyona giren kimyasallar" },
+    { en: "barrel", tr: "varil" },
+    { en: "drum", tr: "büyük varil içi" },
+    { en: "pollution", tr: "kirlilik, çevre kirliliği" },
+    { en: "eye shower", tr: "göz duşu" },
+    { en: "absorbent material", tr: "emici malzeme" },
+    { en: "container", tr: "kap, konteyner" },
+    { en: "label", tr: "etiket" },
+    { en: "labelled", tr: "etiketlenmiş" }
+  ],
+  "E – MSDS (GÜVENLİK FORMU)": [
+    { en: "Material Safety Data Sheet (MSDS)", tr: "Malzeme Güvenlik Bilgi Formu (MGBF)" },
+    { en: "hazard description", tr: "tehlike tanımı" },
+    { en: "composition", tr: "bileşim" },
+    { en: "ingredients", tr: "içerik, bileşenler" },
+    { en: "first aid measures", tr: "ilk yardım önlemleri" },
+    { en: "fire fighting measures", tr: "yangınla mücadele önlemleri" },
+    { en: "accidental spread", tr: "kaza sonucu yayılma" },
+    { en: "handling", tr: "elleçleme, taşıma" },
+    { en: "exposure controls", tr: "maruziyet kontrolleri" },
+    { en: "stability", tr: "kararlılık" },
+    { en: "toxicological", tr: "toksikolojik" },
+    { en: "ecological", tr: "ekolojik" },
+    { en: "disposal", tr: "bertaraf, imha" },
+    { en: "transport information", tr: "taşımacılık bilgisi" },
+    { en: "legislation", tr: "mevzuat, yasal düzenleme" },
+    { en: "legal requirement", tr: "yasal zorunluluk" }
+  ],
+  "F – GÜRÜLTÜ (NOISE)": [
+    { en: "noise", tr: "gürültü" },
+    { en: "sound", tr: "ses" },
+    { en: "sound level", tr: "ses düzeyi" },
+    { en: "decibel (dB)", tr: "desibel" },
+    { en: "frequency", tr: "frekans" },
+    { en: "hearing loss", tr: "işitme kaybı" },
+    { en: "disturbing", tr: "rahatsız edici" },
+    { en: "undesirable", tr: "istenmeyen" },
+    { en: "whisper", tr: "fısıltı" },
+    { en: "rainfall", tr: "yağmur sesi" },
+    { en: "exhaust", tr: "egzoz" },
+    { en: "vacuum cleaner", tr: "elektrikli süpürge" },
+    { en: "heavy traffic", tr: "yoğun trafik" },
+    { en: "alarm clock", tr: "çalar saat" },
+    { en: "factory noise", tr: "fabrika gürültüsü" },
+    { en: "lawn mower", tr: "çim biçme makinesi" },
+    { en: "chainsaw", tr: "motorlu testere" },
+    { en: "drill hammer", tr: "matkap çekici" },
+    { en: "shotgun", tr: "av tüfeği" },
+    { en: "rocket launcher", tr: "roket fırlatıcı" },
+    { en: "combating noise", tr: "gürültüyle mücadele" },
+    { en: "active technical measures", tr: "aktif teknik önlemler" },
+    { en: "passive technical measures", tr: "pasif teknik önlemler" },
+    { en: "soundproof", tr: "ses geçirmez" },
+    { en: "soundproof walls", tr: "ses geçirmez duvarlar" },
+    { en: "soundproof materials", tr: "ses geçirmez malzemeler" },
+    { en: "reflect sound", tr: "ses yansıtmak" },
+    { en: "minimize vibration", tr: "titreşimi en aza indirmek" },
+    { en: "audiometry", tr: "odyometri (işitme testi)" },
+    { en: "audiometer", tr: "odyometre" },
+    { en: "hearing acuity", tr: "işitme keskinliği" },
+    { en: "weekly noise exposure level", tr: "haftalık gürültü maruziyet düzeyi" },
+    { en: "exposure limit value", tr: "maruziyet limit değeri" }
+  ],
+  "G – TİTREŞİM (VIBRATION)": [
+    { en: "vibration", tr: "titreşim" },
+    { en: "mechanical oscillation", tr: "mekanik salınım" },
+    { en: "balance point", tr: "denge noktası" },
+    { en: "unwanted movement", tr: "istenmeyen hareket" },
+    { en: "energy", tr: "enerji" },
+    { en: "hand-arm vibration", tr: "el-kol titreşimi" },
+    { en: "hand-arm vibration syndrome", tr: "el-kol titreşim sendromu" },
+    { en: "vibration white finger", tr: "titreşim beyaz parmak sendromu" },
+    { en: "dead finger", tr: "ölü parmak" },
+    { en: "Raynaud's syndrome", tr: "Raynaud Sendromu" },
+    { en: "industrial injury", tr: "endüstriyel yaralanma / meslek hastalığı" },
+    { en: "triggered by", tr: "tarafından tetiklenen" },
+    { en: "continuous use", tr: "sürekli kullanım" },
+    { en: "vibrating hand-held machinery", tr: "titreşimli el aletleri" },
+    { en: "elbow joint", tr: "dirsek eklemi" },
+    { en: "bent", tr: "bükülü, eğimli" },
+    { en: "tendency", tr: "eğilim" },
+    { en: "grasp", tr: "kavramak, tutmak" }
+  ],
+  "H – AYDINLATMA (LIGHTING)": [
+    { en: "lighting", tr: "aydınlatma" },
+    { en: "illuminated", tr: "aydınlatılmış" },
+    { en: "daylight", tr: "gün ışığı" },
+    { en: "artificial light", tr: "yapay ışık" },
+    { en: "sufficient", tr: "yeterli" },
+    { en: "adequate", tr: "yeterli, uygun" },
+    { en: "intensity", tr: "yoğunluk" },
+    { en: "constant", tr: "sabit, değişmeyen" },
+    { en: "well spread", tr: "iyi dağılmış" },
+    { en: "shade (shadow)", tr: "gölge" },
+    { en: "reflection", tr: "yansıma" },
+    { en: "dazzling", tr: "göz kamaştırıcı" },
+    { en: "glare", tr: "göz kamaşması, parlama" },
+    { en: "inappropriate", tr: "uygunsuz" },
+    { en: "insufficient", tr: "yetersiz" },
+    { en: "stretch the nerves", tr: "sinirleri germek" },
+    { en: "fatigue", tr: "yorgunluk" },
+    { en: "vision efficiency", tr: "görme verimliliği" },
+    { en: "economic losses", tr: "ekonomik kayıplar" },
+    { en: "direct lighting", tr: "doğrudan aydınlatma" },
+    { en: "indirect lighting", tr: "dolaylı aydınlatma" },
+    { en: "semi-direct / local lighting", tr: "yarı doğrudan / yerel aydınlatma" }
+  ],
+  "I – TERMAL KONFOR": [
+    { en: "temperature", tr: "sıcaklık" },
+    { en: "thermal comfort", tr: "termal konfor" },
+    { en: "satisfaction", tr: "memnuniyet" },
+    { en: "subjective", tr: "öznel" },
+    { en: "humidity", tr: "nem" },
+    { en: "air velocity", tr: "hava hızı" },
+    { en: "heat transfer", tr: "isi transferi" },
+    { en: "molecular motion", tr: "moleküler hareket" },
+    { en: "dry thermometer", tr: "kuru termometre / cıvalı termometre" },
+    { en: "ventilated", tr: "havalandırılmış" },
+    { en: "relative humidity", tr: "bağıl nem" }
+  ],
+  "J – BASINÇ (PRESSURE)": [
+    { en: "pressure", tr: "basınç" },
+    { en: "perpendicular", tr: "dik" },
+    { en: "unit area", tr: "birim alan" },
+    { en: "atmospheric pressure", tr: "atmosferik basınç" },
+    { en: "sea level", tr: "deniz seviyesi" },
+    { en: "mercury", tr: "cıva" },
+    { en: "circulatory", tr: "dolaşımsal" },
+    { en: "respiratory", tr: "solunumsal" },
+    { en: "distress", tr: "sıkıntı" }
+  ],
+  "K – RADYASYON (RADIATION)": [
+    { en: "radiation", tr: "radyasyon" },
+    { en: "emitted", tr: "yayılan" },
+    { en: "particles", tr: "parçacıklar" },
+    { en: "medium", tr: "ortam" },
+    { en: "absorbed", tr: "emilmiş" },
+    { en: "ionizing radiation", tr: "iyonize radyasyon" },
+    { en: "non-ionizing radiation", tr: "iyonize olmayan radyasyon" },
+    { en: "cosmic rays", tr: "kozmik ışınlar" },
+    { en: "X rays", tr: "X ışınları" },
+    { en: "radioactive materials", tr: "radyoaktif maddeler" },
+    { en: "radiant heat", tr: "radyant ısı" },
+    { en: "radio waves", tr: "radyo dalgaları" },
+    { en: "microwaves", tr: "mikrodalgalar" },
+    { en: "terahertz radiation", tr: "terahertz radyasyonu" },
+    { en: "infrared light", tr: "kızılötesi ışık" },
+    { en: "ultraviolet light", tr: "ultraviyole ışık" },
+    { en: "natural radiation sources", tr: "doğal radyasyon kaynakları" },
+    { en: "artificial radiation sources", tr: "yapay radyasyon kaynakları" },
+    { en: "radioactive elements", tr: "radyoaktif elementler" },
+    { en: "half-life", tr: "yarı ömür" },
+    { en: "radio isotopes", tr: "radio izotoplar" },
+    { en: "disintegration", tr: "bozunma" },
+    { en: "radon gas", tr: "radon gazı" },
+    { en: "radium", tr: "radyum" },
+    { en: "nuclear power plants", tr: "nükleer güç santralleri" },
+    { en: "atomic bomb", tr: "atom bombası" },
+    { en: "luminescent", tr: "ışıldayan, fosforlu" },
+    { en: "phosphate rocks", tr: "fosfat kayaçları" },
+    { en: "shielding", tr: "zırhlama, kalkan" },
+    { en: "barrier", tr: "bariyer" },
+    { en: "dose", tr: "doz" },
+    { en: "dose intensity", tr: "doz yoğunluğu" },
+    { en: "inversely proportional", tr: "ters orantılı" }
+  ],
+  "L – ERGONOMİ (ERGONOMICS)": [
+    { en: "ergonomics", tr: "ergonomi" },
+    { en: "ergonomists", tr: "ergonomist" },
+    { en: "abilities", tr: "yetenekler" },
+    { en: "limitations", tr: "sınırlamalar" },
+    { en: "interaction", tr: "etkileşim" },
+    { en: "workplace design", tr: "işyeri tasarımı" },
+    { en: "hand tools", tr: "el aletleri" },
+    { en: "working hours", tr: "çalışma saatleri" },
+    { en: "shift", tr: "vardiya" },
+    { en: "break times", tr: "mola süreleri" },
+    { en: "food regime", tr: "beslenme düzeni" },
+    { en: "ideal sitting", tr: "ideal oturma" },
+    { en: "spine", tr: "omurga" },
+    { en: "orthopaedic", tr: "ortopedik" },
+    { en: "heater / radiator", tr: "radyatör" },
+    { en: "bronchitis", tr: "bronşit" },
+    { en: "allergic sensitivity", tr: "alerjik duyarlılık" },
+    { en: "conjunctivitis", tr: "konjonktivit (göz iltihabı)" },
+    { en: "charged particles", tr: "yüklü parçacıklar" },
+    { en: "negative electric charge", tr: "negatif elektrik yükü" },
+    { en: "dynamic", tr: "dinamik" },
+    { en: "chronic discomfort", tr: "kronik rahatsızlık" },
+    { en: "cramps", tr: "kramplar" },
+    { en: "muscle aches", tr: "kas ağrıları" },
+    { en: "strains", tr: "zorlama, gerilme" }
+  ],
+  "M – EGZERSİZ VE BEL AĞRISI": [
+    { en: "office exercises", tr: "ofis egzersizleri" },
+    { en: "circular motion", tr: "dairesel hareket" },
+    { en: "tension", tr: "gerginlik" },
+    { en: "stretch", tr: "germek, esnetmek" },
+    { en: "elbow", tr: "dirsek" },
+    { en: "wrist", tr: "bilek" },
+    { en: "ankle", tr: "ayak bileği" },
+    { en: "palm", tr: "avuç içi" },
+    { en: "backrest", tr: "sırt desteği" },
+    { en: "protective ergonomic principles", tr: "koruyucu ergonomik ilkeler" },
+    { en: "low back pain", tr: "bel ağrısı" },
+    { en: "stool", tr: "tabure" },
+    { en: "supine position", tr: "sırtüstü pozisyon" },
+    { en: "pillow", tr: "yastık" },
+    { en: "lumbar region", tr: "bel bölgesi" },
+    { en: "lean", tr: "eğilmek" },
+    { en: "hip", tr: "kalça" },
+    { en: "knee", tr: "diz" },
+    { en: "frequency", tr: "sıklık" }
+  ],
+  "N – MANUEL TAŞIMA": [
+    { en: "manual handling", tr: "el ile taşıma / manuel taşıma" },
+    { en: "lifting", tr: "kaldırma" },
+    { en: "lowering", tr: "indirme" },
+    { en: "pushing", tr: "itme" },
+    { en: "pulling", tr: "çekme" },
+    { en: "carrying", tr: "taşıma" },
+    { en: "moving a load", tr: "yük hareket ettirme" },
+    { en: "ergonomic conditions", tr: "ergonomik koşullar" },
+    { en: "load", tr: "yük" },
+    { en: "unstable", tr: "dengesiz" },
+    { en: "contents", tr: "içerik" },
+    { en: "displaced", tr: "kaymış, yerinden oynamış" },
+    { en: "intensity", tr: "yoğunluk" },
+    { en: "crash", tr: "çarpışma" },
+    { en: "tiring", tr: "yorucu" },
+    { en: "bending", tr: "bükme, eğilme" },
+    { en: "unstable position", tr: "dengesiz pozisyon" },
+    { en: "uneven (ground)", tr: "engebeli, düzensiz (zemin)" },
+    { en: "slipping", tr: "kaymak" },
+    { en: "height difference", tr: "yükseklik farkı" },
+    { en: "individual risk factors", tr: "bireysel risk faktörleri" },
+    { en: "physical structure", tr: "fiziksel yapı" },
+    { en: "unsuitable", tr: "uygunsuz" },
+    { en: "auxiliary equipment", tr: "yardımcı ekipman" },
+    { en: "lever", tr: "kaldıraç" },
+    { en: "wedge", tr: "kama" },
+    { en: "obstacle", tr: "engel" },
+    { en: "shoulder length", tr: "omuz genişliği" },
+    { en: "balanced", tr: "dengeli, dengelenmiş" },
+    { en: "stable surface", tr: "kararlı yüzey" },
+    { en: "firmly", tr: "sağlam biçimde" },
+    { en: "unloading", tr: "indirme / boşaltma" }
+  ],
+  "O – İŞ EKİPMANLARI": [
+    { en: "safe use of work equipment", tr: "iş ekipmanlarının güvenli kullanımı" },
+    { en: "CE mark / CE symbol", tr: "CE işareti" },
+    { en: "product legislation", tr: "ürün mevzuatı" },
+    { en: "employment legislation", tr: "istihdam mevzuatı" },
+    { en: "free movement of goods", tr: "malların serbest dolaşımı" },
+    { en: "manufacturer", tr: "üretici" },
+    { en: "end users", tr: "son kullanıcı" },
+    { en: "declaration of conformity", tr: "uygunluk beyannamesi" },
+    { en: "standard", tr: "standart" },
+    { en: "assembly", tr: "montaj, kurulum" },
+    { en: "significantly modified", tr: "önemli ölçüde değiştirilmiş" },
+    { en: "duty", tr: "yükümlülük" },
+    { en: "provision", tr: "sağlama, temin etme" },
+    { en: "inspection", tr: "muayene, denetim" },
+    { en: "maintenance", tr: "bakım" },
+    { en: "maintenance log", tr: "bakım günlüğü" },
+    { en: "efficient", tr: "verimli" },
+    { en: "efficient working order", tr: "verimli çalışır durumda" },
+    { en: "repair", tr: "onarım" },
+    { en: "installation", tr: "kurulum" },
+    { en: "deterioration", tr: "bozulma" },
+    { en: "risk assessment", tr: "risk değerlendirmesi" },
+    { en: "suitability", tr: "uygunluk" },
+    { en: "stabilized", tr: "sabitlenmiş" },
+    { en: "clamping", tr: "kelepçeleme" },
+    { en: "alert", tr: "uyarı" },
+    { en: "warning device", tr: "uyarı cihazı" },
+    { en: "locking device", tr: "kilitleme cihazı" },
+    { en: "mechanical change", tr: "mekanik değişiklik" },
+    { en: "electrical change", tr: "elektrik değişiklik" },
+    { en: "software change", tr: "yazılım değişikliği" },
+    { en: "lubrication", tr: "yağlama" },
+    { en: "revision", tr: "revizyon" },
+    { en: "re-design", tr: "yeniden tasarım" },
+    { en: "isolation", tr: "izolasyon, ayrıştırma" },
+    { en: "emergency stop", tr: "acil durdurma" },
+    { en: "rupture", tr: "kopma, yırtılma" },
+    { en: "disintegration", tr: "parçalanma" },
+    { en: "overheating", tr: "aşırı ısınma" },
+    { en: "scars", tr: "yara izleri, skarlar" }
+  ],
+  "P – EKRANLI ARAÇLAR": [
+    { en: "display screen device", tr: "ekranlı araç" },
+    { en: "monitor", tr: "monitör" },
+    { en: "keyboard", tr: "klavye" },
+    { en: "mouse", tr: "fare" },
+    { en: "work surface / work table", tr: "çalışma yüzeyi / masası" },
+    { en: "work chair", tr: "çalışma sandalyesi" },
+    { en: "character", tr: "karakter / harf" },
+    { en: "flicker / flickering", tr: "titreme" },
+    { en: "stable (image)", tr: "kararlı (görüntü)" },
+    { en: "brightness", tr: "parlaklık" },
+    { en: "contrast", tr: "kontrast" },
+    { en: "adjustable", tr: "ayarlanabilir" },
+    { en: "separate base", tr: "ayrı taban" },
+    { en: "reflections", tr: "yansımalar" },
+    { en: "opaque", tr: "mat, opak" },
+    { en: "legible", tr: "okunabilir" },
+    { en: "wrist rest", tr: "bilek desteği" },
+    { en: "document holder", tr: "belge tutucu" },
+    { en: "backrest", tr: "sırt desteği" },
+    { en: "foot rest", tr: "ayak desteği" },
+    { en: "repetition", tr: "tekrarlama" },
+    { en: "improper posture", tr: "uygunsuz duruş" },
+    { en: "excess workload", tr: "aşırı iş yükü" },
+    { en: "unsupported", tr: "desteksiz" },
+    { en: "musculoskeletal diseases", tr: "kas-iskelet hastalıkları" },
+    { en: "eyesight problems", tr: "göz sorunları" },
+    { en: "nervous system disorders", tr: "sinir sistemi bozuklukları" },
+    { en: "circulatory system disorders", tr: "dolaşım sistemi bozuklukları" },
+    { en: "psychological disorders", tr: "psikolojik bozukluklar" },
+    { en: "digestive system disorders", tr: "sindirim sistemi bozuklukları" },
+    { en: "myopia", tr: "miyopi (uzağı görememe)" },
+    { en: "astigmatism", tr: "astigmat" },
+    { en: "numbness", tr: "uyuşma" },
+    { en: "redness", tr: "kızarıklık" },
+    { en: "concentration", tr: "konsantrasyon" },
+    { en: "blinking", tr: "göz kırpma" },
+    { en: "periodic health checks", tr: "periyodik sağlık kontrolleri" },
+    { en: "workplace doctor", tr: "işyeri hekimi" }
+  ],
+  "R – ELEKTRİK GÜVENLİĞİ": [
+    { en: "electricity", tr: "elektrik" },
+    { en: "electric charge", tr: "elektrik yükü" },
+    { en: "electric current", tr: "elektrik akımı" },
+    { en: "conductor", tr: "iletken" },
+    { en: "ampere", tr: "amper" },
+    { en: "direct current (DC)", tr: "doğru akım" },
+    { en: "alternating current (AC)", tr: "alternatif akım" },
+    { en: "electronic circuit", tr: "elektronik devre" },
+    { en: "battery", tr: "pil, batarya" },
+    { en: "refrigerator", tr: "buzdolabı" },
+    { en: "washing machine", tr: "çamaşır makinesi" },
+    { en: "voltage", tr: "gerilim, voltaj" },
+    { en: "rated voltage", tr: "nominal gerilim" },
+    { en: "low voltage", tr: "alçak gerilim" },
+    { en: "high voltage", tr: "yüksek gerilim" },
+    { en: "phase", tr: "faz" },
+    { en: "fuse", tr: "sigorta" },
+    { en: "overcurrent protection", tr: "aşırı akım koruması" },
+    { en: "overload", tr: "aşırı yük" },
+    { en: "essential component", tr: "temel bileşen" },
+    { en: "melt", tr: "erime" },
+    { en: "circuit", tr: "devre" },
+    { en: "residual current relay / circuit breaker (RCCB)", tr: "kaçak akım rölesi / şalteri" },
+    { en: "leakage current", tr: "kaçak akım" },
+    { en: "shock hazard", tr: "çarpma tehlikesi" },
+    { en: "supply", tr: "besleme, arz" },
+    { en: "return conductor", tr: "dönüş iletkeni" },
+    { en: "indispensable", tr: "vazgeçilmez" },
+    { en: "invisible", tr: "görünmez" },
+    { en: "potential danger", tr: "potansiyel tehlike" },
+    { en: "electric shock", tr: "elektrik çarpması" },
+    { en: "contraction", tr: "kasılma" },
+    { en: "cardiac arrest", tr: "kalp durması (kardiyak arrest)" },
+    { en: "skin burns", tr: "cilt yanıkları" },
+    { en: "rubber-soled shoes", tr: "lastik tabanlı ayakkabı" },
+    { en: "insulating rod", tr: "yalıtım çubuğu" },
+    { en: "conductive objects", tr: "iletken nesneler" },
+    { en: "bare hands", tr: "çıplak eller" },
+    { en: "grounded plug", tr: "topraklı fiş" },
+    { en: "automatic fuse", tr: "otomatik sigorta" },
+    { en: "socket", tr: "priz" },
+    { en: "cracked plug", tr: "çatlak fiş" },
+    { en: "extension cable", tr: "uzatma kablosu" },
+    { en: "insulated", tr: "yalıtımlı" },
+    { en: "pliers", tr: "kerpeten, pense" },
+    { en: "screwdriver", tr: "tornavida" },
+    { en: "non-conductor", tr: "iletken olmayan, yalıtkan" },
+    { en: "portable power tools", tr: "portatif elektrikli aletler" },
+    { en: "loose clothing", tr: "bol giysi" },
+    { en: "sparking", tr: "kıvılcım saçma" },
+    { en: "switching off", tr: "kapatmak, kesmek" },
+    { en: "maintenance and repair", tr: "bakım ve onarım" },
+    { en: "energy source", tr: "enerji kaynağı" },
+    { en: "warning sign", tr: "uyarı işareti" },
+    { en: "electrical panel", tr: "elektrik panosu" }
+  ],
+  "S – GENEL ÖNEMLİ KELİMELER": [
+    { en: "ensure", tr: "sağlamak, garantilemek" },
+    { en: "prevent", tr: "önlemek" },
+    { en: "minimize", tr: "en aza indirmek" },
+    { en: "maximize", tr: "en üst düzeye çıkarmak" },
+    { en: "appropriate", tr: "uygun" },
+    { en: "suitable", tr: "uygun, elverişli" },
+    { en: "available", tr: "mevcut, hazır" },
+    { en: "occur", tr: "meydana gelmek" },
+    { en: "risk", tr: "risk" },
+    { en: "hazard", tr: "tehlike" },
+    { en: "protection", tr: "koruma" },
+    { en: "assessment", tr: "değerlendirme" },
+    { en: "comply with", tr: "uymak, uyum sağlamak" },
+    { en: "requirement", tr: "gereklilik" },
+    { en: "instruction", tr: "talimat" },
+    { en: "manual", tr: "el kitabı, kılavuz" },
+    { en: "employer", tr: "işveren" },
+    { en: "employee", tr: "çalışan" },
+    { en: "workplace", tr: "işyeri" },
+    { en: "occupational health and safety", tr: "iş sağlığı ve güvenliği" },
+    { en: "specialist", tr: "uzman" },
+    { en: "inspection", tr: "denetim, muayene" },
+    { en: "competent", tr: "yetkin, yetkili" },
+    { en: "authority", tr: "yetkili, otorite" },
+    { en: "directive", tr: "direktif" },
+    { en: "obligation", tr: "yükümlülük" },
+    { en: "significant", tr: "önemli, önemli ölçüde" },
+    { en: "implement", tr: "uygulamak" },
+    { en: "measure", tr: "önlem / ölçüm" },
+    { en: "identify", tr: "belirlemek, tespit etmek" },
+    { en: "determine", tr: "belirlemek" },
+    { en: "exposure", tr: "maruziyet" },
+    { en: "risk factor", tr: "risk faktörü" },
+    { en: "result in", tr: "ile sonuçlanmak" },
+    { en: "lead to", tr: "yol açmak" },
+    { en: "due to", tr: "nedeniyle" },
+    { en: "in accordance with", tr: "uygun olarak, göre" },
+    { en: "associated with", tr: "ile ilişkili" },
+    { en: "prior to", tr: "öncesinde" },
+    { en: "therefore", tr: "bu nedenle" },
+    { en: "however", tr: "ancak, bununla birlikte" },
+    { en: "whereas", tr: "oysa, -ken" },
+    { en: "particularly", tr: "özellikle" },
+    { en: "approximately", tr: "yaklaşık olarak" },
+    { en: "classified", tr: "sınıflandırılmış" },
+    { en: "defined as", tr: "olarak tanımlanmış" },
+    { en: "referred to as", tr: "olarak adlandırılan" },
+    { en: "according to", tr: "göre" },
+    { en: "in terms of", tr: "açısından" }
+  ]
+};
+
+// Bileşen hem galeri modunda hem de quiz modunda kullanılabilir.
+// Galeri modunda kendi flip state'ini yönetir.
+const FlashCard = ({ item, externalFlipped = null, onFlipRequest = null, isLarge = false }) => {
+  const [internalFlipped, setInternalFlipped] = useState(false);
+  
+  // Eğer externalFlipped varsa onu kullan, yoksa kendi state'ini kullan
+  const isFlipped = externalFlipped !== null ? externalFlipped : internalFlipped;
+
+  const handleClick = () => {
+    if (onFlipRequest) {
+      onFlipRequest();
+    } else {
+      setInternalFlipped(!internalFlipped);
+    }
+  };
+
+  // Kart boyutlarını optimize et
+  const containerHeight = isLarge ? "h-64 md:h-80" : "h-56 md:h-60";
+  const titleSize = isLarge ? "text-2xl md:text-3xl" : "text-lg md:text-xl";
+  const paddingSize = isLarge ? "p-8" : "p-4 md:p-6";
+
+  return (
+    <div 
+      className={`perspective-1000 w-full ${containerHeight} cursor-pointer group select-none`}
+      onClick={handleClick}
+    >
+      <div className={`relative w-full h-full transition-all duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+        {/* ÖN YÜZ (English) */}
+        <div className={`absolute inset-0 bg-white border-2 border-slate-100 rounded-2xl md:rounded-3xl shadow-sm flex flex-col items-center justify-center ${paddingSize} backface-hidden group-hover:border-blue-200 transition-colors`}>
+          <span className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2 md:mb-4">English</span>
+          <h3 className={`${titleSize} font-bold text-slate-800 text-center leading-tight overflow-hidden text-ellipsis px-2`}>
+            {item.en}
+          </h3>
+          <div className="absolute bottom-4 md:bottom-6 text-slate-300 flex items-center gap-2 text-[10px] md:text-xs">
+            <RotateCw size={14} /> Çevirmek için tıkla
+          </div>
+        </div>
+
+        {/* ARKA YÜZ (Türkçe) */}
+        <div className={`absolute inset-0 bg-blue-600 border-2 border-blue-600 rounded-2xl md:rounded-3xl shadow-xl flex flex-col items-center justify-center ${paddingSize} rotate-y-180 backface-hidden`}>
+          <span className="text-blue-200 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2 md:mb-4">Türkçe</span>
+          <h3 className={`${titleSize} font-bold text-white text-center leading-tight px-2`}>
+            {item.tr}
+          </h3>
+          <div className="absolute bottom-4 md:bottom-6 text-blue-200/50 text-[10px] md:text-xs">
+            Geri dönmek için tıkla
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuizMode = ({ onFinish }) => {
+  const [deck, setDeck] = useState([]);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [initialCount, setInitialCount] = useState(0);
+
+  useEffect(() => {
+    const allWords = Object.values(VOCAB_DATA).flat();
+    const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+    setDeck(shuffled);
+    setInitialCount(allWords.length);
+  }, []);
+
+  const handleKnown = (e) => {
+    e.stopPropagation();
+    setIsFlipped(false);
+    setTimeout(() => {
+      setDeck(prev => prev.slice(1));
+    }, 200);
+  };
+
+  const handleUnknown = (e) => {
+    e.stopPropagation();
+    setIsFlipped(false);
+    setTimeout(() => {
+      setDeck(prev => {
+        const current = prev[0];
+        const rest = prev.slice(1);
+        const insertAt = Math.min(rest.length, 5);
+        const newDeck = [...rest];
+        newDeck.splice(insertAt, 0, current);
+        return newDeck;
+      });
+    }, 200);
+  };
+
+  if (deck.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100 text-center p-8 max-w-lg mx-auto">
+        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 size={32} />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Harika!</h2>
+        <p className="text-slate-500 mb-8">Tüm desteyi tamamladınız. Hafızanız harika!</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="w-full bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+        >
+          <RefreshCcw size={20} /> Yeniden Başla
+        </button>
+      </div>
+    );
+  }
+
+  const currentCard = deck[0];
+  const progress = ((initialCount - deck.length) / initialCount) * 100;
+
+  return (
+    <div className="max-w-xl mx-auto space-y-8">
+      <div className="space-y-3">
+        <div className="flex justify-between items-end px-1">
+          <div className="flex items-center gap-2">
+            <Brain className="text-blue-600" size={18} />
+            <span className="font-bold text-slate-700">Öğrenme Modu</span>
+          </div>
+          <span className="text-slate-400 text-sm font-medium">Kalan: {deck.length}</span>
+        </div>
+        <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-blue-600 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      <FlashCard 
+        item={currentCard} 
+        externalFlipped={isFlipped} 
+        onFlipRequest={() => setIsFlipped(!isFlipped)} 
+        isLarge={true}
+      />
+
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          onClick={handleUnknown}
+          className="flex flex-col items-center gap-1 p-5 rounded-2xl bg-white border-2 border-slate-100 hover:border-red-100 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all"
+        >
+          <XCircle size={28} />
+          <span className="font-bold text-sm">Bilemedim</span>
+        </button>
+        <button
+          onClick={handleKnown}
+          className="flex flex-col items-center gap-1 p-5 rounded-2xl bg-white border-2 border-slate-100 hover:border-green-100 hover:bg-green-50 text-slate-500 hover:text-green-600 transition-all"
+        >
+          <CheckCircle2 size={28} />
+          <span className="font-bold text-sm">Biliyorum</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const App = () => {
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("A – KİMYASALLAR");
+  const [viewMode, setViewMode] = useState('cards');
+
+  const categories = Object.keys(VOCAB_DATA);
+
+  const filteredWords = useMemo(() => {
+    let words = [];
+    if (search) {
+      Object.keys(VOCAB_DATA).forEach(cat => {
+        const matching = VOCAB_DATA[cat].filter(w => 
+          w.en.toLowerCase().includes(search.toLowerCase()) || 
+          w.tr.toLowerCase().includes(search.toLowerCase())
+        );
+        words.push(...matching);
+      });
+    } else {
+      words = VOCAB_DATA[activeCategory];
+    }
+    return words;
+  }, [search, activeCategory]);
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-900">
+      <aside className="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen overflow-hidden z-20">
+        <div className="p-6 border-b border-slate-100 bg-blue-600">
+          <div className="flex items-center gap-3 text-white mb-1">
+            <BookOpen size={22} />
+            <h1 className="text-lg font-bold">İSG Çalışma Rehberi</h1>
+          </div>
+          <p className="text-blue-100 text-[10px] uppercase tracking-wider font-semibold">İngilizce - Türkçe Sözlük</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                setViewMode('quiz');
+                setSearch("");
+              }}
+              className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all mb-6 ${
+                viewMode === 'quiz'
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200 font-bold"
+                  : "bg-slate-900 text-white hover:bg-slate-800"
+              }`}
+            >
+              <Brain size={18} />
+              <span className="text-sm">Öğrenme Modu</span>
+            </button>
+
+            <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kategoriler</div>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setSearch("");
+                  if (viewMode === 'quiz') setViewMode('cards');
+                }}
+                className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-all ${
+                  activeCategory === cat && !search && viewMode !== 'quiz'
+                    ? "bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <span className="text-xs truncate">{cat}</span>
+                <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-md">
+                  {VOCAB_DATA[cat].length}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      <main className="flex-1 overflow-y-auto h-screen p-4 md:p-10 relative">
+        <div className="max-w-5xl mx-auto space-y-10">
+          
+          {viewMode === 'quiz' ? (
+            <QuizMode onFinish={() => setViewMode('cards')} />
+          ) : (
+            <>
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+                      {search ? `Arama: "${search}"` : activeCategory}
+                    </h2>
+                    <p className="text-slate-400 text-xs mt-1">Bu bölümde {filteredWords.length} terim bulunmaktadır.</p>
+                  </div>
+
+                  <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 w-fit">
+                    <button 
+                      onClick={() => setViewMode('cards')}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-semibold transition-all ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                    >
+                      <Layers size={14} /> Kartlar
+                    </button>
+                    <button 
+                      onClick={() => setViewMode('list')}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-semibold transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                    >
+                      <Search size={14} /> Liste
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative group max-w-2xl">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Kelime ara (Eng/Tr)..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-white border border-slate-200 py-3.5 pl-11 pr-6 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm"
+                  />
+                </div>
+              </div>
+
+              {viewMode === 'cards' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {filteredWords.length > 0 ? (
+                    filteredWords.map((item, idx) => (
+                      <FlashCard 
+                        key={`${item.en}-${idx}`} 
+                        item={item} 
+                        isLarge={false}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full py-24 text-center bg-white rounded-3xl border border-dashed border-slate-200">
+                      <BookOpen size={40} className="mx-auto text-slate-100 mb-4" />
+                      <p className="text-slate-400 text-sm">Sonuç bulunamadı.</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[500px]">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">İngilizce</th>
+                          <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Türkçe</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredWords.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-blue-50/40 transition-colors group">
+                            <td className="px-6 py-4 font-bold text-slate-700 text-sm">{item.en}</td>
+                            <td className="px-6 py-4 text-slate-500 text-sm group-hover:text-blue-700">{item.tr}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
+
+      <style>{`
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
