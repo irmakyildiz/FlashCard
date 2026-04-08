@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İSG Flashcards - Hacettepe AI</title>
+    <title>İSG Flashcards & Quiz - Hacettepe AI</title>
     
     <!-- Gerekli Kütüphaneler (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- İkonlar için en güvenli yol: FontAwesome CSS -->
+    <!-- İkonlar: FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -28,6 +28,10 @@
 
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
+
+        // -------------------------
+        // 1. KELİME VERİ SETİ
+        // -------------------------
         const VOCAB_DATA = {
           "A – KİMYASALLAR": [
             { en: "chemical substance", tr: "kimyasal madde" },
@@ -525,6 +529,57 @@
           ]
         };
 
+        // -------------------------
+        // 2. KONU ÖĞRENME VERİ SETİ (PDF'ten Özetler)
+        // -------------------------
+        const LECTURE_DATA = [
+            {
+                title: "Kimyasal Risk Faktörleri",
+                content: "Kimyasal maddeler, akut veya kronik zararlar verebilir. Vücuda solunum (en sık), deri emilimi ve sindirim yoluyla girerler. Korunma hiyerarşisi: Kaynakta (ikame, kapalı sistem), Ortamda (havalandırma) ve son olarak Kişisel (KKD) önlemlerdir. MGBF (MSDS) 16 başlıktan oluşur ve yasal zorunluluktur."
+            },
+            {
+                title: "Fiziksel Riskler: Gürültü ve Titreşim",
+                content: "Gürültü, istenmeyen sestir. 85 dB üzerinde günlük çalışma 7,5 saati, haftalık ortalama 87 dB'i aşamaz. Titreşim, mekanik salınımdır. El-kol titreşimi 'Titreşim Beyaz Parmak' (Dead Finger / Raynaud) sendromuna yol açar. Dirsekleri bükmemek ve aleti çok sıkmamak önemlidir."
+            },
+            {
+                title: "Ergonomi ve Manuel Taşıma",
+                content: "Ergonomi 'iş bilimi'dir. Amaç kaza ve yorgunluğu önlemektir. Manuel taşımada bel-sırt yaralanması riski vardır. Yük kaldırırken dizler bükülmeli, sırt dik tutulmalı ve yük vücuda yakın tutulmalıdır. Uzun süre oturanlar ayak desteği kullanmalı ve ekran göz hizasında olmalıdır."
+            },
+            {
+                title: "Elektrik Güvenliği",
+                content: "Elektrik akımı kasılma, kalp durması, yanık ve düşmeye neden olabilir. Kaçak akım rölesi (RCCB) devreyi hızla keserek hayat kurtarır. Elektrik çarpan kişiye çıplak elle dokunulmaz; yalıtkan (kuru tahta vb.) nesnelerle müdahale edilir ve sigorta kapatılır."
+            }
+        ];
+
+        // -------------------------
+        // 3. HAZIR TEST SORULARI
+        // -------------------------
+        const INITIAL_QUIZ_QUESTIONS = [
+            {
+                question: "Aşağıdakilerden hangisi kimyasalların vücuda giriş yollarından biri değildir?",
+                options: ["Solunum (İnhalasyon)", "Deri Emilimi", "Sindirim", "Göz Teması", "İşitme yolu"],
+                answer: "İşitme yolu"
+            },
+            {
+                question: "Haftalık gürültü maruziyet düzeyi en fazla kaç desibel (dB) olabilir?",
+                options: ["80", "85", "87", "90", "100"],
+                answer: "87"
+            },
+            {
+                question: "El-kol titreşimi sonucu ortaya çıkan meslek hastalığına ne ad verilir?",
+                options: ["Bronşit", "Miyopi", "Beyaz Parmak (Dead Finger)", "Kardiyak Arrest", "Astigmat"],
+                answer: "Beyaz Parmak (Dead Finger)"
+            },
+            {
+                question: "Yük kaldırırken dikkat edilmesi gereken en önemli kural nedir?",
+                options: ["Belden eğilmek", "Yükü vücuttan uzakta tutmak", "Sırtı dik tutup dizleri bükmek", "Ayakları bitişik tutmak", "Hızlıca kaldırmak"],
+                answer: "Sırtı dik tutup dizleri bükmek"
+            }
+        ];
+
+        // -------------------------
+        // KELİME KARTI BİLEŞENİ
+        // -------------------------
         const FlashCard = ({ item, isFlipped, onClick, isLarge = false }) => {
           const height = isLarge ? "h-64 md:h-80" : "h-52 md:h-60";
           return (
@@ -544,13 +599,27 @@
           );
         };
 
+        // -------------------------
+        // ANA UYGULAMA (APP)
+        // -------------------------
         const App = () => {
+          // view modları: 'cards', 'learn', 'test'
           const [view, setView] = useState('cards'); 
           const [activeCat, setActiveCat] = useState("A – KİMYASALLAR");
           const [search, setSearch] = useState("");
-          const [quizDeck, setQuizDeck] = useState([]);
-          const [isQuizFlipped, setIsQuizFlipped] = useState(false);
           const [flippedStates, setFlippedStates] = useState({});
+
+          // Test (Quiz) State'leri
+          const [customQuestions, setCustomQuestions] = useState(INITIAL_QUIZ_QUESTIONS);
+          const [currentQIndex, setCurrentQIndex] = useState(0);
+          const [score, setScore] = useState(0);
+          const [showTestResult, setShowTestResult] = useState(false);
+          const [selectedOption, setSelectedOption] = useState(null);
+          
+          // Soru Ekleme State'leri
+          const [newQText, setNewQText] = useState("");
+          const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
+          const [newQAnswerIndex, setNewQAnswerIndex] = useState(0);
 
           const filteredList = useMemo(() => {
             if (search) {
@@ -562,63 +631,100 @@
             return VOCAB_DATA[activeCat] || [];
           }, [search, activeCat]);
 
-          const startQuiz = () => {
-            const all = Object.values(VOCAB_DATA).flat().sort(() => Math.random() - 0.5);
-            setQuizDeck(all);
-            setView('quiz');
-            setIsQuizFlipped(false);
+          // Test Fonksiyonları
+          const handleAnswerClick = (option) => {
+            if (selectedOption) return; // Zaten cevaplanmış
+            setSelectedOption(option);
+            if (option === customQuestions[currentQIndex].answer) {
+              setScore(score + 1);
+            }
+            setTimeout(() => {
+              if (currentQIndex + 1 < customQuestions.length) {
+                setCurrentQIndex(currentQIndex + 1);
+                setSelectedOption(null);
+              } else {
+                setShowTestResult(true);
+              }
+            }, 1000);
           };
 
-          const handleQuizNext = (known) => {
-            setIsQuizFlipped(false);
-            setTimeout(() => {
-              setQuizDeck(prev => {
-                const rest = prev.slice(1);
-                return known ? rest : [...rest, prev[0]];
-              });
-            }, 200);
+          const resetTest = () => {
+            setCurrentQIndex(0);
+            setScore(0);
+            setShowTestResult(false);
+            setSelectedOption(null);
+          };
+
+          // Manuel Soru Ekleme
+          const handleAddQuestion = (e) => {
+            e.preventDefault();
+            if (!newQText || newQOptions.some(opt => opt.trim() === "")) {
+                alert("Lütfen soruyu ve tüm şıkları doldurun!");
+                return;
+            }
+            const newQuestion = {
+                question: newQText,
+                options: [...newQOptions],
+                answer: newQOptions[newQAnswerIndex]
+            };
+            setCustomQuestions([...customQuestions, newQuestion]);
+            alert("Soru başarıyla eklendi!");
+            setNewQText("");
+            setNewQOptions(["", "", "", ""]);
+            setNewQAnswerIndex(0);
+          };
+
+          const handleOptionChange = (index, value) => {
+              const updatedOptions = [...newQOptions];
+              updatedOptions[index] = value;
+              setNewQOptions(updatedOptions);
           };
 
           return (
             <div className="min-h-screen flex flex-col md:flex-row font-sans">
+              
+              {/* SOL MENÜ */}
               <aside className="w-full md:w-72 bg-white border-r border-slate-200 p-6 flex flex-col h-screen sticky top-0 overflow-hidden">
                 <div className="bg-blue-600 p-5 rounded-2xl text-white mb-6 shadow-lg shadow-blue-100">
                   <h1 className="font-black text-xl flex items-center gap-2 italic">
-                    <i className="fa-solid fa-bolt"></i> İSG QUIZ
+                    <i className="fa-solid fa-bolt"></i> İSG PORTAL
                   </h1>
                 </div>
 
-                <button onClick={startQuiz} className="w-full bg-slate-900 text-white p-4 rounded-xl flex items-center justify-center gap-3 mb-8 hover:bg-black transition-all font-bold">
-                  <i className="fa-solid fa-brain"></i> Öğrenme Modu
-                </button>
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
+                    {/* MOD BUTONLARI */}
+                    <div className="space-y-2">
+                        <button onClick={() => setView('cards')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'cards' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-layer-group"></i> Kelime Kartları
+                        </button>
+                        <button onClick={() => setView('learn')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'learn' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-book-open"></i> Konu Öğrenme
+                        </button>
+                        <button onClick={() => {setView('test'); resetTest();}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-pen-to-square"></i> Test Çöz
+                        </button>
+                    </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  <p className="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">KATEGORİLER</p>
-                  {Object.keys(VOCAB_DATA).map(c => (
-                    <button key={c} onClick={() => { setView('cards'); setActiveCat(c); setSearch(""); }}
-                      className={`w-full text-left p-3 rounded-xl text-sm mb-1 transition-all ${activeCat === c && view !== 'quiz' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
-                      {c}
-                    </button>
-                  ))}
+                    {/* KATEGORİLER (Sadece Kartlar modunda aktif) */}
+                    {view === 'cards' && (
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest border-t pt-4">KATEGORİLER</p>
+                            {Object.keys(VOCAB_DATA).map(c => (
+                            <button key={c} onClick={() => { setActiveCat(c); setSearch(""); }}
+                                className={`w-full text-left p-3 rounded-xl text-sm mb-1 transition-all ${activeCat === c ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                {c}
+                            </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
               </aside>
 
+              {/* ANA İÇERİK */}
               <main className="flex-1 p-6 md:p-12">
-                {view === 'quiz' ? (
-                  quizDeck.length > 0 ? (
-                    <div className="max-w-xl mx-auto space-y-8">
-                      <div className="flex justify-between items-center text-slate-400 font-bold">
-                        <span><i className="fa-solid fa-layer-group"></i> Kalan: {quizDeck.length}</span>
-                        <button onClick={() => setView('cards')} className="hover:text-red-500">Çıkış <i className="fa-solid fa-xmark"></i></button>
-                      </div>
-                      <FlashCard item={quizDeck[0]} isFlipped={isQuizFlipped} onClick={() => setIsQuizFlipped(!isQuizFlipped)} isLarge={true} />
-                      <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => handleQuizNext(false)} className="bg-white border-2 border-red-100 p-6 rounded-3xl text-red-500 font-black hover:bg-red-50 transition-all">BİLEMEDİM</button>
-                        <button onClick={() => handleQuizNext(true)} className="bg-white border-2 border-green-100 p-6 rounded-3xl text-green-500 font-black hover:bg-green-50 transition-all">BİLİYORUM</button>
-                      </div>
-                    </div>
-                  ) : <div className="text-center py-20"><h2 className="text-4xl font-black mb-4">Şampiyon! 🏆</h2><button onClick={() => setView('cards')} className="text-blue-600 font-bold">Kartlara Geri Dön</button></div>
-                ) : (
+                
+                {/* MOD 1: KELİME KARTLARI */}
+                {view === 'cards' && (
                   <div className="max-w-5xl mx-auto space-y-10">
                     <div className="relative group">
                       <i className="fa-solid fa-magnifying-glass absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
@@ -632,6 +738,105 @@
                     </div>
                   </div>
                 )}
+
+                {/* MOD 2: KONU ÖĞRENME (PDF ÖZETLERİ) */}
+                {view === 'learn' && (
+                    <div className="max-w-4xl mx-auto space-y-8">
+                        <h2 className="text-3xl font-black text-slate-800 border-b-4 border-amber-500 inline-block pb-2">Ders Notları Özetleri</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {LECTURE_DATA.map((lec, i) => (
+                                <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                                    <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
+                                        <i className="fa-solid fa-bookmark"></i>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-800 mb-3">{lec.title}</h3>
+                                    <p className="text-slate-600 leading-relaxed text-sm">{lec.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* MOD 3: TEST (QUIZ) ve SORU EKLEME */}
+                {view === 'test' && (
+                    <div className="max-w-3xl mx-auto space-y-8">
+                        
+                        {/* Test Çözme Alanı */}
+                        <div className="bg-white p-8 rounded-3xl shadow-md border border-slate-100">
+                            {!showTestResult ? (
+                                <div>
+                                    <div className="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
+                                        <span>Soru {currentQIndex + 1} / {customQuestions.length}</span>
+                                        <span className="text-green-500">Skor: {score}</span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-slate-800 mb-8">{customQuestions[currentQIndex].question}</h3>
+                                    <div className="space-y-3">
+                                        {customQuestions[currentQIndex].options.map((opt, i) => {
+                                            let btnClass = "bg-slate-50 border-2 border-slate-100 hover:border-blue-300 hover:bg-blue-50 text-slate-700";
+                                            if (selectedOption) {
+                                                if (opt === customQuestions[currentQIndex].answer) btnClass = "bg-green-100 border-2 border-green-500 text-green-800 font-bold";
+                                                else if (opt === selectedOption) btnClass = "bg-red-100 border-2 border-red-500 text-red-800 font-bold";
+                                                else btnClass = "bg-slate-50 border-2 border-slate-100 opacity-50";
+                                            }
+
+                                            return (
+                                                <button 
+                                                    key={i} 
+                                                    onClick={() => handleAnswerClick(opt)}
+                                                    className={`w-full text-left p-4 rounded-2xl transition-all ${btnClass}`}
+                                                    disabled={selectedOption !== null}
+                                                >
+                                                    {String.fromCharCode(65 + i)}) {opt}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                                        <i className="fa-solid fa-trophy"></i>
+                                    </div>
+                                    <h2 className="text-3xl font-black text-slate-800 mb-2">Test Bitti!</h2>
+                                    <p className="text-xl text-slate-600 mb-8">Doğru Sayısı: <span className="font-bold text-green-600">{score}</span> / {customQuestions.length}</p>
+                                    <button onClick={resetTest} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">
+                                        Yeniden Çöz
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Manuel Soru Ekleme Formu */}
+                        <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200">
+                            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                <i className="fa-solid fa-circle-plus text-blue-600"></i> Kendi Sorunu Ekle
+                            </h3>
+                            <form onSubmit={handleAddQuestion} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Soru Metni</label>
+                                    <textarea required value={newQText} onChange={(e) => setNewQText(e.target.value)} className="w-full p-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24" placeholder="Soru yazınız..."></textarea>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {newQOptions.map((opt, i) => (
+                                        <div key={i}>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Şık {String.fromCharCode(65 + i)}</label>
+                                            <div className="flex items-center gap-2">
+                                                <input type="radio" name="correctAnswer" checked={newQAnswerIndex === i} onChange={() => setNewQAnswerIndex(i)} className="w-5 h-5 text-blue-600" />
+                                                <input required type="text" value={opt} onChange={(e) => handleOptionChange(i, e.target.value)} className="w-full p-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder={`Şık ${String.fromCharCode(65 + i)}...`} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-slate-500 italic">Doğru cevabı belirtmek için şıkkın yanındaki yuvarlağı seçin.</p>
+                                <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-black transition-colors">
+                                    Soruyu Teste Ekle
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                )}
+
               </main>
             </div>
           );
