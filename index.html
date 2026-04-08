@@ -603,20 +603,24 @@
         // ANA UYGULAMA (APP)
         // -------------------------
         const App = () => {
-          // view modları: 'cards', 'learn', 'test'
+          // view modları: 'cards', 'quiz', 'learn', 'test'
           const [view, setView] = useState('cards'); 
           const [activeCat, setActiveCat] = useState("A – KİMYASALLAR");
           const [search, setSearch] = useState("");
           const [flippedStates, setFlippedStates] = useState({});
 
-          // Test (Quiz) State'leri
+          // ---- ÖĞRENME MODU (Kart Destesi) State'leri ----
+          const [flashcardDeck, setFlashcardDeck] = useState([]);
+          const [isFlashcardFlipped, setIsFlashcardFlipped] = useState(false);
+
+          // ---- TEST MODU State'leri ----
           const [customQuestions, setCustomQuestions] = useState(INITIAL_QUIZ_QUESTIONS);
           const [currentQIndex, setCurrentQIndex] = useState(0);
           const [score, setScore] = useState(0);
           const [showTestResult, setShowTestResult] = useState(false);
           const [selectedOption, setSelectedOption] = useState(null);
           
-          // Soru Ekleme State'leri
+          // Soru Ekleme Formu State'leri
           const [newQText, setNewQText] = useState("");
           const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
           const [newQAnswerIndex, setNewQAnswerIndex] = useState(0);
@@ -631,9 +635,28 @@
             return VOCAB_DATA[activeCat] || [];
           }, [search, activeCat]);
 
-          // Test Fonksiyonları
+          // --- ÖĞRENME MODU FONKSİYONLARI ---
+          const startFlashcardQuiz = () => {
+            const all = Object.values(VOCAB_DATA).flat().sort(() => Math.random() - 0.5);
+            setFlashcardDeck(all);
+            setView('quiz');
+            setIsFlashcardFlipped(false);
+          };
+
+          const handleFlashcardNext = (known) => {
+            setIsFlashcardFlipped(false);
+            setTimeout(() => {
+              setFlashcardDeck(prev => {
+                const rest = prev.slice(1);
+                // Bilirse at, bilemezse destenin sonuna ekle
+                return known ? rest : [...rest, prev[0]];
+              });
+            }, 200);
+          };
+
+          // --- TEST FONKSİYONLARI ---
           const handleAnswerClick = (option) => {
-            if (selectedOption) return; // Zaten cevaplanmış
+            if (selectedOption) return;
             setSelectedOption(option);
             if (option === customQuestions[currentQIndex].answer) {
               setScore(score + 1);
@@ -655,7 +678,7 @@
             setSelectedOption(null);
           };
 
-          // Manuel Soru Ekleme
+          // --- SORU EKLEME FONKSİYONLARI ---
           const handleAddQuestion = (e) => {
             e.preventDefault();
             if (!newQText || newQOptions.some(opt => opt.trim() === "")) {
@@ -694,14 +717,17 @@
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
                     {/* MOD BUTONLARI */}
                     <div className="space-y-2">
-                        <button onClick={() => setView('cards')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'cards' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-layer-group"></i> Kelime Kartları
+                        <button onClick={() => setView('cards')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'cards' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-layer-group w-5"></i> Kelime Kartları
+                        </button>
+                        <button onClick={startFlashcardQuiz} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'quiz' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-brain w-5"></i> Öğrenme Modu
                         </button>
                         <button onClick={() => setView('learn')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'learn' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-book-open"></i> Konu Öğrenme
+                            <i className="fa-solid fa-book-open w-5"></i> Konu Öğrenme
                         </button>
                         <button onClick={() => {setView('test'); resetTest();}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-pen-to-square"></i> Test Çöz
+                            <i className="fa-solid fa-pen-to-square w-5"></i> Test Çöz
                         </button>
                     </div>
 
@@ -723,7 +749,7 @@
               {/* ANA İÇERİK */}
               <main className="flex-1 p-6 md:p-12">
                 
-                {/* MOD 1: KELİME KARTLARI */}
+                {/* MOD 1: KELİME KARTLARI (Galeri) */}
                 {view === 'cards' && (
                   <div className="max-w-5xl mx-auto space-y-10">
                     <div className="relative group">
@@ -739,7 +765,30 @@
                   </div>
                 )}
 
-                {/* MOD 2: KONU ÖĞRENME (PDF ÖZETLERİ) */}
+                {/* MOD 2: ÖĞRENME MODU (Flashcard Quiz - Biliyorum/Bilemedim) */}
+                {view === 'quiz' && (
+                  flashcardDeck.length > 0 ? (
+                    <div className="max-w-xl mx-auto space-y-8">
+                      <div className="flex justify-between items-center text-slate-400 font-bold">
+                        <span><i className="fa-solid fa-layer-group"></i> Kalan Kart: {flashcardDeck.length}</span>
+                        <button onClick={() => setView('cards')} className="hover:text-red-500">Çıkış <i className="fa-solid fa-xmark"></i></button>
+                      </div>
+                      <FlashCard item={flashcardDeck[0]} isFlipped={isFlashcardFlipped} onClick={() => setIsFlashcardFlipped(!isFlashcardFlipped)} isLarge={true} />
+                      <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => handleFlashcardNext(false)} className="bg-white border-2 border-red-100 p-6 rounded-3xl text-red-500 font-black hover:bg-red-50 transition-all">BİLEMEDİM</button>
+                        <button onClick={() => handleFlashcardNext(true)} className="bg-white border-2 border-green-100 p-6 rounded-3xl text-green-500 font-black hover:bg-green-50 transition-all">BİLİYORUM</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-20">
+                        <h2 className="text-4xl font-black mb-4">Şampiyon! 🏆</h2>
+                        <p className="text-slate-500 mb-6">Tüm kelimeleri bitirdin.</p>
+                        <button onClick={() => setView('cards')} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Kartlara Geri Dön</button>
+                    </div>
+                  )
+                )}
+
+                {/* MOD 3: KONU ÖĞRENME (PDF ÖZETLERİ) */}
                 {view === 'learn' && (
                     <div className="max-w-4xl mx-auto space-y-8">
                         <h2 className="text-3xl font-black text-slate-800 border-b-4 border-amber-500 inline-block pb-2">Ders Notları Özetleri</h2>
@@ -757,7 +806,7 @@
                     </div>
                 )}
 
-                {/* MOD 3: TEST (QUIZ) ve SORU EKLEME */}
+                {/* MOD 4: TEST (QUIZ) ve SORU EKLEME */}
                 {view === 'test' && (
                     <div className="max-w-3xl mx-auto space-y-8">
                         
