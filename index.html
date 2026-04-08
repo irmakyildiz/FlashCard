@@ -530,15 +530,42 @@
         };
 
         // -------------------------
-        // 2. KONU ÖĞRENME VERİ SETİ (PDF Özetleri)
+        // 2. KAPSAMLI KONU ÖĞRENME (Ders Notları Özetleri - 100 Bilgi Kartından Beslenir)
         // -------------------------
         const LECTURE_DATA = [
-            { title: "Kimyasal Risk Faktörleri", content: "Kimyasal maddeler, akut veya kronik zararlar verebilir. Vücuda solunum (en sık), deri emilimi ve sindirim yoluyla girerler. Korunma hiyerarşisi: Kaynakta (ikame, kapalı sistem), Ortamda (havalandırma) ve son olarak Kişisel (KKD) önlemlerdir. MGBF (MSDS) 16 başlıktan oluşur ve yasal zorunluluktur." },
-            { title: "Fiziksel Riskler: Gürültü ve Titreşim", content: "Gürültü, istenmeyen sestir. 85 dB üzerinde günlük çalışma 7,5 saati, haftalık ortalama 87 dB'i aşamaz. Titreşim, mekanik salınımdır. El-kol titreşimi 'Titreşim Beyaz Parmak' (Dead Finger / Raynaud) sendromuna yol açar. Dirsekleri bükmemek ve aleti çok sıkmamak önemlidir." },
-            { title: "Ergonomi ve Manuel Taşıma", content: "Ergonomi 'iş bilimi'dir. Amaç kaza ve yorgunluğu önlemektir. Manuel taşımada bel-sırt yaralanması riski vardır. Yük kaldırırken dizler bükülmeli, sırt dik tutulmalı ve yük vücuda yakın tutulmalıdır. Uzun süre oturanlar ayak desteği kullanmalı ve ekran göz hizasında olmalıdır." },
-            { title: "Elektrik Güvenliği", content: "Elektrik akımı kasılma, kalp durması, yanık ve düşmeye neden olabilir. Kaçak akım rölesi (RCCB) devreyi hızla keserek hayat kurtarır. Elektrik çarpan kişiye çıplak elle dokunulmaz; yalıtkan (kuru tahta vb.) nesnelerle müdahale edilir ve sigorta kapatılır." }
+            {
+                title: "Kimyasal Risk Faktörleri ve MGBF",
+                content: "Kimyasallar vücuda inhalasyon (solunum), absorpsiyon (emilim) ve yutma (sindirim) yoluyla girer. Tehlikenin boyutunu belirleyen 4 faktör: fiziksel-kimyasal özellikler, maruziyet şekli/süresi, kişi özellikleri ve fiziksel ortamdır. Önlem hiyerarşisi: Önce Kaynak (ikame, kapalı sistem), sonra Ortam (havalandırma) ve en son Kişisel (KKD) önlemlerdir. Reaksiyona giren maddeler yan yana depolanmaz. Göz duşu ve 16 başlıklı Malzeme Güvenlik Bilgi Formu (MGBF) zorunludur. Toksikolojik (sağlığa etki) ve ekolojik (çevreye etki) bilgiler MGBF'de yer alır."
+            },
+            {
+                title: "Fiziksel Riskler: Gürültü ve Titreşim",
+                content: "Gürültü için haftalık maruziyet limiti 87 dB'dir. 85 dB ve üzeri ortamlarda günde en fazla 7,5 saat çalışılabilir. Normal ofis 50 dB, insan konuşması 60 dB, rock konseri 110 dB'dir. Tıbbi önlem olarak 'odyometri' (işitme testi) yapılır. Titreşim ise mekanik salınımdır. El-kol titreşimi 'Titreşim Beyaz Parmak' (Raynaud / Dead Finger) sendromuna yol açar. Titreşimli alet sıkı kavranmamalı, dirsek bükülmemelidir (bükülürse titreşim üst kola daha fazla aktarılır)."
+            },
+            {
+                title: "Aydınlatma, Termal Konfor ve Radyasyon",
+                content: "İyi aydınlatma göz kamaştırmaz, sabit ve yeterli yoğunluktadır, gölge oluşturmaz. Yetersiz aydınlatma ekonomik kayba ve kazalara yol açar. Termal konfor; sıcaklık, nem ve hava hızına bağlıdır (Önerilen nem %70, ofis sıcaklığı 19.4-22.8°C, ağır iş 12.8-15.6°C). Deniz seviyesinde atmosferik basınç 760 mm cıvadır. Radyasyondan korunmada 3 ilke: Süre (kısa tutulmalı), Mesafe (radyasyon mesafenin karesiyle ters orantılıdır, uzak durulmalı) ve Zırhlama (bariyer). X ışınları iyonize radyasyona örnektir; radon gazı ise doğal radyasyon kaynağıdır."
+            },
+            {
+                title: "Ergonomi, Ofis Hataları ve Egzersizler",
+                content: "Ergonomi 'iş bilimi'dir; amacı kaza ve yorgunluğu önlemek, verimi artırmaktır (eğitimler bel ağrısını %50+ azaltır). Çalışma sandalyesinde yükseklik ayarı ve esnek bel desteği olmalıdır; diz açısı yaklaşık 90 derece olmalıdır. Ofisteki kuru hava bronşite, ekranın statik yükü ise 'konjonktivite' (göz enfeksiyonu) neden olabilir. Ekrandan gelen yansımalar göz gerginliği yapar. 20-20-20 kuralıyla gözler dinlendirilmeli. Boyun için baş sağa/sola çevrilip 8 sn bekletilir. Bilek düz tutulmalı (bükülmemeli) ve 40 dakikadan fazla aralıksız klavye kullanılmamalıdır."
+            },
+            {
+                title: "Manuel Taşıma (Elle Taşıma) Kuralları",
+                content: "Bel ve sırt yaralanmalarını önlemek için yük kaldırırken adım adım gidilmelidir. Yol üzerindeki engeller önceden kaldırılır, ayaklar birbirinden ayrık (arka ayak taşıma yönüne hizalı) tutulur. En önemli kural: Dizler bükülür ancak 'sırt dik tutulur' (çene içeri çekili). Yük vücuda yakın tutulmalıdır ki bel bölgesindeki tork (moment) azalsın. Dönüş yapılacaksa belden bükülerek değil, adımlarla 'tüm vücut' döndürülür. Çalışanın eğitimsiz olması bireysel risk iken; zeminin kaygan ve engebeli olması ortam kaynaklı risktir."
+            },
+            {
+                title: "İş Ekipmanları Güvenliği (PUWER) ve CE",
+                content: "PUWER (1993) kurallarına göre işveren, ekipmanın amaca uygun yapılandırılmasından sorumludur. Kurulum sonrası ve yeni bir yere taşındığında muayene (inspection) zorunludur. Bakım günlüğü varsa güncel tutulmalıdır. Yağlama, temizlik, küçük ayarlamalar bakımdır; ancak 'büyük yeniden tasarım' bakım değildir (risk değerlendirmesi gerektirir). CE işareti üretici (manufacturer) tarafından konur. CE işaretli makinelerde stabilite sağlanmalı, enerji izolasyonu güvenli yapılmalı ve makineyi anında durduracak 'acil durdurma' (emergency stop) butonu bulunmalıdır."
+            },
+            {
+                title: "Elektrik Güvenliği",
+                content: "Elektrik akımı (Amper) ile ölçülür. DC (pil), yönü ve büyüklüğü değişmeyen akımdır. Alçak gerilim sınırı 1000 V faz-fazdır. Akım vücutta kardiyak arreste (kalp ritmi bozulması), kasılmaya ve cilt yanıklarına neden olur. Kaçak akım rölesi (RCCB) akım dengesizliğini algılayıp devreyi hızla keser. Elektrik çarpmasında İLK iş sigortadan enerjiyi kesmektir; kişiye çıplak elle veya normal ayakkabıyla dokunulmaz, yalıtkan aletle müdahale edilir. Bakımda elektrik panosunun önü açık bırakılmalı ve cihazı fişe takmadan önce 'kapalı' olduğundan emin olunmalıdır."
+            }
         ];
 
+        // -------------------------
+        // 3. 100 BİLGİ KARTI VERİ SETİ
+        // -------------------------
         const INFO_CARDS_DATA = [
             { q: "Kimyasal madde nedir?", a: "Doğal ortamda bulunan, üretilen veya atık olarak ortaya çıkan; piyasaya arz edilip edilmediğine bakılmaksızın her türlü element, bileşik veya karışımdır." },
             { q: "Kimyasallar vücuda kaç yoldan girer? Bunlar nelerdir?", a: "3 yoldan: 1) İnhalasyon (solunum), 2) Absorpsiyon (deri/göz emilimi), 3) Yutma (sindirim)" },
@@ -643,7 +670,7 @@
         ];
 
         // -------------------------
-        // 3. FULL ENGLISH QUIZ QUESTIONS (104 Questions)
+        // 4. FULL ENGLISH QUIZ QUESTIONS (104 Questions)
         // -------------------------
         const INITIAL_QUIZ_QUESTIONS = [
             { question: "Which of the following is not a route of entry for chemicals into the body?", options: ["Inhalation", "Skin absorption", "Ingestion", "Hearing"], answer: "Hearing" },
@@ -809,9 +836,9 @@
             localStorage.setItem('isg_vocab_data', JSON.stringify(vocabData));
           }, [vocabData]);
 
-          // 2. TEST SORULARI - ANAHTARI DEĞİŞTİRDİK Kİ ESKİLER GİTSİN!
+          // 2. TEST SORULARI
           const [customQuestions, setCustomQuestions] = useState(() => {
-            const savedQs = localStorage.getItem('isg_custom_questions_en'); // YENİ ANAHTAR!
+            const savedQs = localStorage.getItem('isg_custom_questions_en');
             return savedQs ? JSON.parse(savedQs) : INITIAL_QUIZ_QUESTIONS;
           });
 
@@ -837,6 +864,7 @@
           const [score, setScore] = useState(0);
           const [showTestResult, setShowTestResult] = useState(false);
           const [selectedOption, setSelectedOption] = useState(null);
+          const [wrongAnswers, setWrongAnswers] = useState([]); // Yeni: Yanlış soruları tutar
           
           // Soru Ekleme Formu State'leri
           const [newQText, setNewQText] = useState("");
@@ -904,9 +932,20 @@
           const handleAnswerClick = (option) => {
             if (selectedOption) return;
             setSelectedOption(option);
-            if (option === customQuestions[currentQIndex].answer) {
+            
+            const isCorrect = option === customQuestions[currentQIndex].answer;
+            
+            if (isCorrect) {
               setScore(score + 1);
+            } else {
+              // Yanlış soruyu listeye ekle
+              setWrongAnswers(prev => [...prev, {
+                 question: customQuestions[currentQIndex].question,
+                 userAnswer: option,
+                 correctAnswer: customQuestions[currentQIndex].answer
+              }]);
             }
+
             setTimeout(() => {
               if (currentQIndex + 1 < customQuestions.length) {
                 setCurrentQIndex(currentQIndex + 1);
@@ -917,20 +956,23 @@
             }, 1000);
           };
 
-          const resetTest = () => {
-            // Testi Yeniden başlatırken soruları karıştır!
-            const shuffled = [...customQuestions].sort(() => Math.random() - 0.5);
-            // Şıkları da kendi içinde karıştırabiliriz ama şimdilik sadece soruların sırasını karıştıralım.
-            setCustomQuestions(shuffled);
+          const resetTestWithoutShuffle = () => {
             setCurrentQIndex(0);
             setScore(0);
             setShowTestResult(false);
             setSelectedOption(null);
+            setWrongAnswers([]);
           };
 
-          // İlk Test Açılışında da karıştır
+          // Soruları karıştırarak testi yeniden başlat
+          const shuffleAndResetTest = () => {
+            const shuffled = [...customQuestions].sort(() => Math.random() - 0.5);
+            setCustomQuestions(shuffled);
+            resetTestWithoutShuffle();
+          };
+
           const startTest = () => {
-             resetTest();
+             shuffleAndResetTest();
              setView('test');
              setActiveInfoDeck(false);
           }
@@ -1006,11 +1048,10 @@
               {/* ANA İÇERİK */}
               <main className="flex-1 p-6 md:p-12">
                 
-                {/* MOD 1: KELİME KARTLARI (Galeri + Ekleme Formu) */}
+                {/* MOD 1: KELİME KARTLARI */}
                 {view === 'cards' && (
                   <div className="max-w-5xl mx-auto space-y-8">
                     
-                    {/* ARAMA VE EKLEME KISMI */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="relative group">
                           <i className="fa-solid fa-magnifying-glass absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
@@ -1074,7 +1115,7 @@
                   )
                 )}
 
-                {/* MOD 3: KONU ÖĞRENME (100 Bilgi Kartı + PDF Özetleri) */}
+                {/* MOD 3: KONU ÖĞRENME (100 Bilgi Kartı + Gelişmiş PDF Özetleri) */}
                 {view === 'learn' && (
                     activeInfoDeck ? (
                         <div className="max-w-2xl mx-auto space-y-6">
@@ -1119,7 +1160,7 @@
                             </div>
                         </div>
                     ) : (
-                        <div className="max-w-4xl mx-auto space-y-8">
+                        <div className="max-w-5xl mx-auto space-y-8">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-amber-500 pb-4">
                                 <h2 className="text-3xl font-black text-slate-800">Ders Notları Özetleri</h2>
                                 <button onClick={() => setActiveInfoDeck(true)} className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-amber-600 transition-colors flex items-center gap-2">
@@ -1150,7 +1191,12 @@
                                 <div>
                                     <div className="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
                                         <span>Question {currentQIndex + 1} / {customQuestions.length}</span>
-                                        <span className="text-green-500">Score: {score}</span>
+                                        <div className="flex items-center gap-4">
+                                            <button onClick={shuffleAndResetTest} className="text-blue-500 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-lg flex items-center gap-2 transition-colors">
+                                                <i className="fa-solid fa-shuffle"></i> Shuffle
+                                            </button>
+                                            <span className="text-green-500">Score: {score}</span>
+                                        </div>
                                     </div>
                                     <h3 className="text-2xl font-bold text-slate-800 mb-8">{customQuestions[currentQIndex].question}</h3>
                                     <div className="space-y-3">
@@ -1182,9 +1228,34 @@
                                     </div>
                                     <h2 className="text-3xl font-black text-slate-800 mb-2">Test Finished!</h2>
                                     <p className="text-xl text-slate-600 mb-8">Correct Answers: <span className="font-bold text-green-600">{score}</span> / {customQuestions.length}</p>
-                                    <button onClick={resetTest} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">
-                                        Take the Test Again
-                                    </button>
+                                    
+                                    <div className="flex justify-center gap-4">
+                                        <button onClick={resetTestWithoutShuffle} className="bg-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold shadow-sm hover:bg-slate-300 transition-colors">
+                                            Try Same Order
+                                        </button>
+                                        <button onClick={shuffleAndResetTest} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">
+                                            <i className="fa-solid fa-shuffle mr-2"></i> Shuffle & Retry
+                                        </button>
+                                    </div>
+
+                                    {/* YANLIŞ YAPILAN SORULAR LİSTESİ */}
+                                    {wrongAnswers.length > 0 && (
+                                        <div className="mt-12 text-left border-t-2 border-red-100 pt-8">
+                                            <h3 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-2">
+                                                <i className="fa-solid fa-circle-exclamation"></i> Yanlış Yapılan Sorular (Mistakes)
+                                            </h3>
+                                            <div className="space-y-4">
+                                                {wrongAnswers.map((item, idx) => (
+                                                    <div key={idx} className="bg-red-50 p-5 rounded-2xl border border-red-100 shadow-sm">
+                                                        <p className="font-bold text-slate-800 mb-3 text-lg">{idx + 1}. {item.question}</p>
+                                                        <p className="text-sm text-red-600 mb-2 font-medium">Your Answer: <span className="font-bold line-through">{item.userAnswer}</span></p>
+                                                        <p className="text-sm text-green-600 font-medium">Correct Answer: <span className="font-bold">{item.correctAnswer}</span></p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             )}
                         </div>
@@ -1229,4 +1300,3 @@
     </script>
 </body>
 </html>
-```
