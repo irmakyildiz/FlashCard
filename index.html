@@ -1,3 +1,13 @@
+Harika bir geliştirme daha! Hacettepe İSG sınavı için test çözme modunu tam bir İngilizce deneme sınavına dönüştürdük. 
+
+İstediğin gibi:
+1.  Bana gönderdiğin **100 sorunun tamamını ve şıklarını İngilizceye çevirdim**.
+2.  İlk başta eklediğim o örnek 4 soruyu da İngilizceye çevirdim (Toplam **104 soruluk dev bir test havuzu** oldu).
+3.  Tarayıcının eski (Türkçe) test sorularını hatırlayıp ekrana getirmesini engellemek için hafıza anahtarını (`isg_custom_questions_en`) güncelledim. Böylece kodu yapıştırdığın an testin direkt İngilizce olarak başlayacak.
+
+Lütfen `index.html` dosyanın içindeki tüm kodu silip aşağıdaki "Full İngilizce Test" versiyonunu yapıştır:
+
+```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -30,7 +40,7 @@
         const { useState, useMemo, useEffect } = React;
 
         // -------------------------
-        // 1. BAŞLANGIÇ KELİME VERİ SETİ (A-S)
+        // 1. BAŞLANGIÇ KELİME VERİ SETİ
         // -------------------------
         const INITIAL_VOCAB_DATA = {
           "A – KİMYASALLAR": [
@@ -533,53 +543,12 @@
         // 2. KONU ÖĞRENME VERİ SETİ (PDF Özetleri)
         // -------------------------
         const LECTURE_DATA = [
-            {
-                title: "Kimyasal Risk Faktörleri",
-                content: "Kimyasal maddeler, akut veya kronik zararlar verebilir. Vücuda solunum (en sık), deri emilimi ve sindirim yoluyla girerler. Korunma hiyerarşisi: Kaynakta (ikame, kapalı sistem), Ortamda (havalandırma) ve son olarak Kişisel (KKD) önlemlerdir. MGBF (MSDS) 16 başlıktan oluşur ve yasal zorunluluktur."
-            },
-            {
-                title: "Fiziksel Riskler: Gürültü ve Titreşim",
-                content: "Gürültü, istenmeyen sestir. 85 dB üzerinde günlük çalışma 7,5 saati, haftalık ortalama 87 dB'i aşamaz. Titreşim, mekanik salınımdır. El-kol titreşimi 'Titreşim Beyaz Parmak' (Dead Finger / Raynaud) sendromuna yol açar. Dirsekleri bükmemek ve aleti çok sıkmamak önemlidir."
-            },
-            {
-                title: "Ergonomi ve Manuel Taşıma",
-                content: "Ergonomi 'iş bilimi'dir. Amaç kaza ve yorgunluğu önlemektir. Manuel taşımada bel-sırt yaralanması riski vardır. Yük kaldırırken dizler bükülmeli, sırt dik tutulmalı ve yük vücuda yakın tutulmalıdır. Uzun süre oturanlar ayak desteği kullanmalı ve ekran göz hizasında olmalıdır."
-            },
-            {
-                title: "Elektrik Güvenliği",
-                content: "Elektrik akımı kasılma, kalp durması, yanık ve düşmeye neden olabilir. Kaçak akım rölesi (RCCB) devreyi hızla keserek hayat kurtarır. Elektrik çarpan kişiye çıplak elle dokunulmaz; yalıtkan (kuru tahta vb.) nesnelerle müdahale edilir ve sigorta kapatılır."
-            }
+            { title: "Kimyasal Risk Faktörleri", content: "Kimyasal maddeler, akut veya kronik zararlar verebilir. Vücuda solunum (en sık), deri emilimi ve sindirim yoluyla girerler. Korunma hiyerarşisi: Kaynakta (ikame, kapalı sistem), Ortamda (havalandırma) ve son olarak Kişisel (KKD) önlemlerdir. MGBF (MSDS) 16 başlıktan oluşur ve yasal zorunluluktur." },
+            { title: "Fiziksel Riskler: Gürültü ve Titreşim", content: "Gürültü, istenmeyen sestir. 85 dB üzerinde günlük çalışma 7,5 saati, haftalık ortalama 87 dB'i aşamaz. Titreşim, mekanik salınımdır. El-kol titreşimi 'Titreşim Beyaz Parmak' (Dead Finger / Raynaud) sendromuna yol açar. Dirsekleri bükmemek ve aleti çok sıkmamak önemlidir." },
+            { title: "Ergonomi ve Manuel Taşıma", content: "Ergonomi 'iş bilimi'dir. Amaç kaza ve yorgunluğu önlemektir. Manuel taşımada bel-sırt yaralanması riski vardır. Yük kaldırırken dizler bükülmeli, sırt dik tutulmalı ve yük vücuda yakın tutulmalıdır. Uzun süre oturanlar ayak desteği kullanmalı ve ekran göz hizasında olmalıdır." },
+            { title: "Elektrik Güvenliği", content: "Elektrik akımı kasılma, kalp durması, yanık ve düşmeye neden olabilir. Kaçak akım rölesi (RCCB) devreyi hızla keserek hayat kurtarır. Elektrik çarpan kişiye çıplak elle dokunulmaz; yalıtkan (kuru tahta vb.) nesnelerle müdahale edilir ve sigorta kapatılır." }
         ];
 
-        // -------------------------
-        // 3. HAZIR TEST SORULARI
-        // -------------------------
-        const INITIAL_QUIZ_QUESTIONS = [
-            {
-                question: "Aşağıdakilerden hangisi kimyasalların vücuda giriş yollarından biri değildir?",
-                options: ["Solunum (İnhalasyon)", "Deri Emilimi", "Sindirim", "Göz Teması", "İşitme yolu"],
-                answer: "İşitme yolu"
-            },
-            {
-                question: "Haftalık gürültü maruziyet düzeyi en fazla kaç desibel (dB) olabilir?",
-                options: ["80", "85", "87", "90", "100"],
-                answer: "87"
-            },
-            {
-                question: "El-kol titreşimi sonucu ortaya çıkan meslek hastalığına ne ad verilir?",
-                options: ["Bronşit", "Miyopi", "Beyaz Parmak (Dead Finger)", "Kardiyak Arrest", "Astigmat"],
-                answer: "Beyaz Parmak (Dead Finger)"
-            },
-            {
-                question: "Yük kaldırırken dikkat edilmesi gereken en önemli kural nedir?",
-                options: ["Belden eğilmek", "Yükü vücuttan uzakta tutmak", "Sırtı dik tutup dizleri bükmek", "Ayakları bitişik tutmak", "Hızlıca kaldırmak"],
-                answer: "Sırtı dik tutup dizleri bükmek"
-            }
-        ];
-
-        // -------------------------
-        // 4. MÜH104 - 100 BİLGİ KARTI VERİ SETİ
-        // -------------------------
         const INFO_CARDS_DATA = [
             { q: "Kimyasal madde nedir?", a: "Doğal ortamda bulunan, üretilen veya atık olarak ortaya çıkan; piyasaya arz edilip edilmediğine bakılmaksızın her türlü element, bileşik veya karışımdır." },
             { q: "Kimyasallar vücuda kaç yoldan girer? Bunlar nelerdir?", a: "3 yoldan: 1) İnhalasyon (solunum), 2) Absorpsiyon (deri/göz emilimi), 3) Yutma (sindirim)" },
@@ -684,6 +653,116 @@
         ];
 
         // -------------------------
+        // 3. FULL ENGLISH QUIZ QUESTIONS (104 Questions)
+        // -------------------------
+        const INITIAL_QUIZ_QUESTIONS = [
+            { question: "Which of the following is not a route of entry for chemicals into the body?", options: ["Inhalation", "Skin absorption", "Ingestion", "Hearing"], answer: "Hearing" },
+            { question: "What is the maximum weekly noise exposure limit value in decibels (dB)?", options: ["80", "85", "87", "90"], answer: "87" },
+            { question: "What is the occupational disease caused by hand-arm vibration?", options: ["Bronchitis", "Myopia", "Vibration White Finger (Dead Finger)", "Cardiac Arrest"], answer: "Vibration White Finger (Dead Finger)" },
+            { question: "What is the most important rule when lifting a load?", options: ["Bending from the waist", "Keeping the load far from the body", "Keeping the back straight and bending the knees", "Lifting quickly"], answer: "Keeping the back straight and bending the knees" },
+            { question: "Which is false about the definition of a chemical substance?", options: ["Elements found in nature are considered chemical substances.", "Only substances placed on the market are considered chemical substances.", "Wastes generated during production are chemical substances.", "Compounds and mixtures fall within the definition."], answer: "Only substances placed on the market are considered chemical substances." },
+            { question: "Which is not a route of entry for chemicals?", options: ["Inhalation", "Skin and eye absorption", "Ingestion", "Direct injection via the circulatory system"], answer: "Direct injection via the circulatory system" },
+            { question: "What is the correct order of chemical risk measures?", options: ["Personal -> Environment -> Source", "Source -> Personal -> Environment", "Source -> Environment -> Personal", "Environment -> Source -> Personal"], answer: "Source -> Environment -> Personal" },
+            { question: "Which is a chemical risk measure taken at the source?", options: ["Installing general ventilation", "Wearing gloves and masks", "Replacing a hazardous chemical with a less hazardous one (substitution)", "Providing fresh air circulation"], answer: "Replacing a hazardous chemical with a less hazardous one (substitution)" },
+            { question: "Which rule is false for chemical storage?", options: ["Containers must be labeled.", "Interacting chemicals can be stored side by side.", "An eye shower must be available.", "Absorbent material must be kept ready for spills."], answer: "Interacting chemicals can be stored side by side." },
+            { question: "How many headings does an MSDS have?", options: ["8", "12", "14", "16"], answer: "16" },
+            { question: "Which information is not included in an MSDS?", options: ["Toxicological information", "Transport information", "Sales price of the product", "Ecological information"], answer: "Sales price of the product" },
+            { question: "What is the weekly exposure limit for noise?", options: ["75 dB", "80 dB", "87 dB", "95 dB"], answer: "87 dB" },
+            { question: "What is the approximate dB of a normal office environment and refrigerator noise?", options: ["30 dB", "50 dB", "70 dB", "90 dB"], answer: "50 dB" },
+            { question: "What is the maximum daily working time in environments with 85 dB and above?", options: ["6 hours", "7 hours", "7.5 hours", "8 hours"], answer: "7.5 hours" },
+            { question: "Which is an active technical noise measure?", options: ["Enclosing the noise source with a soundproof wall", "Asking employees to use earplugs", "Choosing materials that reduce vibration in machine production", "Moving the high noise department to remote areas"], answer: "Choosing materials that reduce vibration in machine production" },
+            { question: "What does audiometry measure?", options: ["Lung capacity", "Visual acuity", "Hearing acuity at different frequencies", "Blood pressure"], answer: "Hearing acuity at different frequencies" },
+            { question: "What is another name for Vibration White Finger Syndrome?", options: ["Carpal tunnel syndrome", "Secondary form of Raynaud's Syndrome (Dead Finger)", "Tendinitis", "Bursitis"], answer: "Secondary form of Raynaud's Syndrome (Dead Finger)" },
+            { question: "Why should the elbow be kept straight when working with a vibrating tool?", options: ["Blood circulation gets better.", "If the elbow is bent, vibration is transmitted more to the upper arm.", "A straight elbow allows holding the tool tighter.", "It is a legal obligation."], answer: "If the elbow is bent, vibration is transmitted more to the upper arm." },
+            { question: "Which feature should good lighting NOT have?", options: ["Constant and unchanging intensity", "No shadow formation", "Emitting dazzling bright light", "Adequate light intensity"], answer: "Emitting dazzling bright light" },
+            { question: "Which is not a consequence of insufficient lighting?", options: ["Deterioration of work quality", "Eye strain", "Increase in efficiency", "Economic losses"], answer: "Increase in efficiency" },
+            { question: "Which type of lighting illuminates only the working area directly?", options: ["Direct", "Indirect", "Semi-direct / Local", "Diffuse"], answer: "Semi-direct / Local" },
+            { question: "What is the recommended relative humidity for thermal comfort?", options: ["40%", "55%", "70%", "85%"], answer: "70%" },
+            { question: "What is the suitable air temperature range for office work?", options: ["12.8°C – 15.6°C", "16°C – 18°C", "19.4°C – 22.8°C", "24°C – 27°C"], answer: "19.4°C – 22.8°C" },
+            { question: "Which instrument measures ambient temperature in the workplace?", options: ["Hygrometer", "Barometer", "Dry (mercury) thermometer", "Anemometer"], answer: "Dry (mercury) thermometer" },
+            { question: "What is the atmospheric pressure at sea level?", options: ["560 mm Hg", "660 mm Hg", "760 mm Hg", "860 mm Hg"], answer: "760 mm Hg" },
+            { question: "Which is an example of ionizing radiation?", options: ["Infrared light", "Visible light", "X-rays", "Microwaves"], answer: "X-rays" },
+            { question: "How does the 'distance' principle work in radiation protection?", options: ["Radiation intensity decreases directly proportional to the distance.", "Radiation intensity decreases inversely proportional to the square of the distance.", "Distance has no effect.", "Distance is only important for gamma rays."], answer: "Radiation intensity decreases inversely proportional to the square of the distance." },
+            { question: "What is the correct order of the 3 basic methods of radiation protection?", options: ["Shielding - Distance - Time", "Time - Distance - Shielding", "Distance - Shielding - Time", "Time - Shielding - Distance"], answer: "Time - Distance - Shielding" },
+            { question: "Which is a natural radiation source?", options: ["Nuclear power plants", "X-ray devices", "Radon gas", "Atomic bomb tests"], answer: "Radon gas" },
+            { question: "What do the Greek components of the word ergonomics mean?", options: ["Ergo = Human, Nomos = Law", "Ergo = Work, Nomos = Science/Law", "Ergo = Energy, Nomos = Environment", "Ergo = Force, Nomos = Measurement"], answer: "Ergo = Work, Nomos = Science/Law" },
+            { question: "Which is not a main goal of ergonomics?", options: ["Preventing accidents and injuries", "Reducing the number of workers", "Increasing efficiency and quality", "Minimizing fatigue and discomfort"], answer: "Reducing the number of workers" },
+            { question: "Which is not a result of extremely dry air from office heaters?", options: ["Bronchitis", "Dry eyes", "Increased allergic sensitivity", "Hearing loss"], answer: "Hearing loss" },
+            { question: "What health problem is caused by negatively charged particles emitted by computer monitors?", options: ["Low back pain", "Conjunctivitis in the eyes", "Hearing loss", "Respiratory infections"], answer: "Conjunctivitis in the eyes" },
+            { question: "By at least what percentage does ergonomics training reduce the frequency and cost of low back pain?", options: ["20%", "35%", "50%", "75%"], answer: "50%" },
+            { question: "Why should you keep the load close to your body in manual handling?", options: ["To gain speed", "To reduce the load (moment) on the lower back", "To see the load better", "To maintain balance"], answer: "To reduce the load (moment) on the lower back" },
+            { question: "What is the correct statement about 'keeping the back straight' in manual lifting?", options: ["The back should be kept completely flat and tense.", "The natural curve of the back should be maintained by pulling the chin in.", "The back is not important during lifting.", "The back should lean forward and weight taken on shoulders."], answer: "The natural curve of the back should be maintained by pulling the chin in." },
+            { question: "What should be done when a turn is necessary in manual handling?", options: ["Only the lower back region is turned.", "The head and shoulders are turned, legs remain stationary.", "The whole body is turned together (by stepping).", "The load is dropped before turning."], answer: "The whole body is turned together (by stepping)." },
+            { question: "Which is an individual risk factor in manual handling?", options: ["Slippery floor", "The worker lacking sufficient training about the job and risks", "Narrow and low working area", "High ambient temperature"], answer: "The worker lacking sufficient training about the job and risks" },
+            { question: "Who places the CE mark on the product?", options: ["The employer", "The state inspection agency", "The manufacturer", "The end user"], answer: "The manufacturer" },
+            { question: "When did PUWER first come into force?", options: ["January 1, 1990", "January 1, 1993", "January 1, 1998", "January 1, 2003"], answer: "January 1, 1993" },
+            { question: "What is the correct statement about the maintenance log according to PUWER?", options: ["It is not mandatory to keep a maintenance log.", "If a maintenance log exists, it must be kept up to date.", "It is only necessary for heavy industry.", "It is kept for 5 years to show inspectors."], answer: "If a maintenance log exists, it must be kept up to date." },
+            { question: "How long should inspection results be kept under PUWER?", options: ["6 months", "1 year", "Until the next inspection", "Indefinitely"], answer: "Until the next inspection" },
+            { question: "What is the purpose of the 'emergency stop' control on a CE-marked machine?", options: ["To speed up the machine.", "It is designed to stop the machine safely in an emergency.", "To save energy.", "To activate maintenance mode."], answer: "It is designed to stop the machine safely in an emergency." },
+            { question: "Which of the following is not considered maintenance?", options: ["Lubrication", "Cleaning", "Completely re-designing the machine", "Minor adjustments"], answer: "Completely re-designing the machine" },
+            { question: "Which is a false ergonomic feature for a display screen device monitor?", options: ["The screen image should be flicker-free.", "Brightness and contrast should be easily adjustable.", "The screen must be fixed to the wall in a stationary position.", "Disturbing reflections should be prevented."], answer: "The screen must be fixed to the wall in a stationary position." },
+            { question: "What is correct for the wrist when using a keyboard and mouse?", options: ["The wrist should be bent slightly upwards.", "The wrist should not be bent to the right or left; it should be kept straight.", "The wrist angle doesn't matter.", "Using a wrist rest decreases performance."], answer: "The wrist should not be bent to the right or left; it should be kept straight." },
+            { question: "What is the recommended break frequency to protect eye health when working with display screens?", options: ["Every 10 minutes", "Every 20 minutes", "Every 45 minutes", "Every 60 minutes"], answer: "Every 20 minutes" },
+            { question: "Which examination must be performed before starting work with display screen devices?", options: ["Audiometry", "Chest X-ray", "Eye examination (by a specialist doctor)", "Blood test"], answer: "Eye examination (by a specialist doctor)" },
+            { question: "What defines the 'repetition' risk factor in an office environment?", options: ["Different employees doing the same task", "Using a keyboard or tool continuously for more than 4 hours a day", "Taking breaks at the same time every day", "Periodic reporting monthly"], answer: "Using a keyboard or tool continuously for more than 4 hours a day" },
+            { question: "What is the unit of electric current?", options: ["Volt", "Ohm", "Watt", "Ampere"], answer: "Ampere" },
+            { question: "What is true about direct current (DC)?", options: ["House electricity is an example of DC.", "In DC, the direction of the current changes over time.", "A battery is a perfect DC source.", "DC is used in large high-power motors."], answer: "A battery is a perfect DC source." },
+            { question: "What is the low voltage limit?", options: ["50 V phase-to-phase", "220 V phase-to-phase", "500 V phase-to-phase", "1000 V phase-to-phase"], answer: "1000 V phase-to-phase" },
+            { question: "In what situation does a Residual Current Circuit Breaker (RCCB) trip the circuit?", options: ["When the voltage rises too high", "When there is an imbalance between the current in the supply and return conductors", "When the circuit temperature exceeds a certain value", "When the fuse melts"], answer: "When there is an imbalance between the current in the supply and return conductors" },
+            { question: "Which is not among the effects of electric current on the human body?", options: ["Muscle contraction", "Cardiac arrest", "Skin burns", "Bone fracture"], answer: "Bone fracture" },
+            { question: "What is the first thing to do in case of an electric shock?", options: ["Touch the person directly", "Call 112", "Cut the electricity using the fuse", "Wrap the person with a wet cloth"], answer: "Cut the electricity using the fuse" },
+            { question: "Under what condition can a person suffering an electric shock be touched?", options: ["Barehanded, if moving quickly", "With thick rubber-soled shoes and after the fuses are turned off", "When using a wet cloth", "If the person is unconscious"], answer: "With thick rubber-soled shoes and after the fuses are turned off" },
+            { question: "What should not be done when a portable extension cord is not in use?", options: ["Unplug it", "Store it in a dry place", "Leave it plugged into the socket", "Coil it according to the manual"], answer: "Leave it plugged into the socket" },
+            { question: "Why must the handles of screwdrivers used in electrical work be insulated?", options: ["To hold it more firmly", "To prevent the current from passing to the user", "To reduce tool weight", "It is a visual standard, not functional"], answer: "To prevent the current from passing to the user" },
+            { question: "Which electrical safety rule is false?", options: ["Power tools must be checked by authorized persons before use.", "A damaged fuse can be repaired by wrapping it.", "The RCCB should be checked monthly.", "Multiple devices should not be connected to a single socket."], answer: "A damaged fuse can be repaired by wrapping it." },
+            { question: "What does 'insufficient insulation', a source of electrical accidents, mean?", options: ["Insulation degradation where current can pass through unintended paths", "Insufficient fuse capacity", "Weak grounding line", "Thin cable thickness"], answer: "Insulation degradation where current can pass through unintended paths" },
+            { question: "Why should no objects be placed in front of an electrical panel during maintenance and repair?", options: ["Visual access to the panel is mandatory.", "To provide quick physical access to the panel in an emergency", "To leave space for a fire extinguisher", "Because it is a legal rule."], answer: "To provide quick physical access to the panel in an emergency" },
+            { question: "What does the 'ecological information' heading in an MSDS cover?", options: ["Environmental landscaping in the workplace", "The effects of the substance on the natural environment (water, soil, air pollution, etc.)", "The physical properties of the working environment", "The geographical region where the substance is produced"], answer: "The effects of the substance on the natural environment (water, soil, air pollution, etc.)" },
+            { question: "Which is an individual factor determining chemical hazard?", options: ["Flash point of the substance", "Ambient ventilation system", "The health status and genetic makeup of the exposed person", "Equipment used in the production process"], answer: "The health status and genetic makeup of the exposed person" },
+            { question: "Which measure category does the local exhaust ventilation system fall into?", options: ["Personal measures", "Environmental measures", "Measures taken at the source", "Medical measures"], answer: "Measures taken at the source" },
+            { question: "What is the consequence of gripping a vibrating tool tightly?", options: ["Vibration is transmitted less.", "Hand-arm vibration exposure increases.", "Elbow bending decreases.", "Blood circulation improves."], answer: "Hand-arm vibration exposure increases." },
+            { question: "What is the primary medical measure against noise?", options: ["Vitamin supplements", "Audiometry (hearing test)", "Blood pressure measurement", "Chest X-ray"], answer: "Audiometry (hearing test)" },
+            { question: "How many dB of noise does a rock concert produce?", options: ["90 dB", "100 dB", "110 dB", "120 dB"], answer: "110 dB" },
+            { question: "What is the approximate noise level of an airplane taking off?", options: ["100 dB", "110 dB", "120 dB", "130 dB"], answer: "120 dB" },
+            { question: "Which is correct during the 'planning the lift' step in manual handling?", options: ["It should be lifted alone even if help is needed.", "Obstacles on the walking path should be removed beforehand.", "The load must always be kept close to the ground.", "Lifting equipment is only used in heavy industry."], answer: "Obstacles on the walking path should be removed beforehand." },
+            { question: "What should be the approximate knee angle in an ideal sitting position?", options: ["45°", "60°", "90°", "120°"], answer: "90°" },
+            { question: "What is the recommended ambient temperature range for heavy industrial work?", options: ["18°C – 22°C", "15°C – 19°C", "12.8°C – 15.6°C", "10°C – 12°C"], answer: "12.8°C – 15.6°C" },
+            { question: "What is the recommended ambient temperature for light physical work?", options: ["12.8°C", "18.3°C", "20°C", "22.8°C"], answer: "18.3°C" },
+            { question: "What is the basic formula for the 'time' principle in radiation protection?", options: ["Dose = Distance / Time", "Dose = Dose Rate × Time", "Dose = Dose Rate / Distance²", "Dose = Time × Distance"], answer: "Dose = Dose Rate × Time" },
+            { question: "Which is an artificial radiation source?", options: ["Cosmic rays", "Radioactive elements in our body", "Nuclear power plants", "Radon gas"], answer: "Nuclear power plants" },
+            { question: "What does the 'stability' requirement mean for a CE-marked machine?", options: ["The machine software being stable", "Being secured with a clamp or similar when necessary", "The machine noise staying at a constant level", "Stable electrical voltage"], answer: "Being secured with a clamp or similar when necessary" },
+            { question: "Under what condition does the 'inspection' requirement in PUWER become mandatory?", options: ["Only when requested by the manufacturer", "When equipment safety depends on installation conditions or is exposed to conditions causing deterioration", "When a state inspector visits", "When an employee complains"], answer: "When equipment safety depends on installation conditions or is exposed to conditions causing deterioration" },
+            { question: "Which is a mandatory feature for a work chair in display screen work?", options: ["Built-in footrest", "Armrests", "Height adjustment", "Heating system"], answer: "Height adjustment" },
+            { question: "Which situation is not harmful to health in display screen work?", options: ["Back and neck pain", "Increase in the degree of eye disorders", "Adjusting brightness and contrast on the monitor", "Wrist numbness"], answer: "Adjusting brightness and contrast on the monitor" },
+            { question: "Which is a correct measure against the inhalation of a chemical substance?", options: ["Wearing gloves", "Wearing goggles", "Installing a local exhaust ventilation system", "Hanging a warning sign"], answer: "Installing a local exhaust ventilation system" },
+            { question: "Which of the following substances cannot be stored together?", options: ["Water and salt", "Oxidizing substance and radioactive substance", "Organic solvent and detergent", "Plastic and paper"], answer: "Oxidizing substance and radioactive substance" },
+            { question: "Which material should be preferred in the workplace as a passive technical noise measure?", options: ["Metal panels", "Soundproof and non-sound-reflecting materials", "Glass partitions", "Wooden flooring"], answer: "Soundproof and non-sound-reflecting materials" },
+            { question: "Which risk falls into the 'characteristics of the working environment' category in manual handling?", options: ["Advanced age of the employee", "The load being heavy", "Uneven and slippery floor", "Insufficient training"], answer: "Uneven and slippery floor" },
+            { question: "What is the employer's basic obligation regarding work equipment according to PUWER?", options: ["Procuring the cheapest equipment", "Ensuring the equipment is configured properly for its intended use", "Renewing the equipment every 5 years", "Insuring the equipment"], answer: "Ensuring the equipment is configured properly for its intended use" },
+            { question: "Which is not an 'office mistake' in ergonomic workspace design?", options: ["Light source being directly opposite the screen", "Positioning the screen at eye level", "Chair that strains the neck and back", "Sitting in front of the computer for a long time without breaks"], answer: "Positioning the screen at eye level" },
+            { question: "Which is true for 'barrels and drums' in chemical storage?", options: ["Can be stored open, exposed to rain.", "They must be stored in a way that does not create environmental pollution.", "Stacked on top of each other regardless of content.", "Labeling is not mandatory."], answer: "They must be stored in a way that does not create environmental pollution." },
+            { question: "Which electrical rule is correct?", options: ["Turn on the device before plugging it in.", "Cables should be routed below head level.", "Using a grounded plug is optional.", "Fuses must be turned off before starting electrical work."], answer: "Fuses must be turned off before starting electrical work." },
+            { question: "How is the 'shielding' method applied in radiation protection?", options: ["Working time is shortened.", "Stay away from the source.", "An appropriate barrier is placed between the source and the person.", "Radiation-resistant medicine is used."], answer: "An appropriate barrier is placed between the source and the person." },
+            { question: "Which is a symptom of a nervous system disorder in display screen work?", options: ["Low back pain", "Skin rash", "Headache and general fatigue", "Hearing loss"], answer: "Headache and general fatigue" },
+            { question: "What is the most important consequence of incorrect monitor positioning and window reflections?", options: ["Strengthening neck muscles", "Severe mental/perceptual load and eye strain", "Energy saving", "Difficulty using the keyboard"], answer: "Severe mental/perceptual load and eye strain" },
+            { question: "Which is a wrong practice to prevent low back pain?", options: ["Bending the knees when lifting a load from the ground", "Keeping the weight close to the body", "Keeping feet at the same level when standing for long periods", "Using a footstool when necessary"], answer: "Keeping feet at the same level when standing for long periods" },
+            { question: "What does the 'stability and reactivity' heading in an MSDS describe?", options: ["Market shelf stability", "The chemical stability of the substance and how it reacts under conditions", "Price stability", "Worker attitude"], answer: "The chemical stability of the substance and how it reacts under conditions" },
+            { question: "What does the 'isolation and reconnection' requirement mean in a CE-marked machine?", options: ["Providing sound insulation", "Safe isolation from energy sources and reconnection without putting the person at risk", "Isolating the machine from the electrical grid for three months", "Locking the machine in a closed room"], answer: "Safe isolation from energy sources and reconnection without putting the person at risk" },
+            { question: "Which regulation is taken as a basis for legal measures against noise?", options: ["Regulation on Health and Safety Precautions in Working with Chemicals", "Regulation on the Protection of Employees from Risks Related to Noise", "Regulation on Health Precautions in Workplace Buildings", "Personal Protective Equipment Regulation"], answer: "Regulation on the Protection of Employees from Risks Related to Noise" },
+            { question: "Which of the following office exercises is performed for the neck?", options: ["Lifting legs and rotating ankles", "Raising shoulders to ears and rotating back and forth", "Slowly turning the head left and right and waiting for 8 seconds", "Clasping hands behind and pulling shoulders back"], answer: "Slowly turning the head left and right and waiting for 8 seconds" },
+            { question: "What is the main difference between ionizing and non-ionizing radiation?", options: ["Non-ionizing radiation travels faster.", "Ionizing radiation has enough energy to strip electrons from atoms, while non-ionizing radiation does not.", "There is no practical difference.", "Non-ionizing radiation only comes from the sun."], answer: "Ionizing radiation has enough energy to strip electrons from atoms, while non-ionizing radiation does not." },
+            { question: "Which is a risk factor originating from 'job requirements' in manual handling?", options: ["Floor irregularity", "Insufficient training", "Excessive lifting/lowering distances", "Difficulty grasping the load"], answer: "Excessive lifting/lowering distances" },
+            { question: "What is the difference between 'heat' and 'temperature' in terms of thermal comfort?", options: ["They mean the same thing.", "Heat measures energy transfer, temperature measures average molecular motion.", "Temperature measures energy transfer, heat measures moisture.", "They are the same magnitude measured differently."], answer: "Heat measures energy transfer, temperature measures average molecular motion." },
+            { question: "How does electric current damage the heart?", options: ["Stops it by cooling.", "Disrupts the heartbeat rhythm and damages the heart muscles.", "Clogs the heart vessels.", "Only causes loss of consciousness."], answer: "Disrupts the heartbeat rhythm and damages the heart muscles." },
+            { question: "Which is the correct definition of PPE use?", options: ["PPE is always the first choice.", "PPE is designed only for chemical risks.", "PPE is used as a last resort when measures at the source and environment are insufficient, but it is mandatory when necessary.", "PPE use is optional."], answer: "PPE is used as a last resort when measures at the source and environment are insufficient, but it is mandatory when necessary." },
+            { question: "Who is not among the persons held responsible by PUWER?", options: ["Owner of the equipment", "Operator of the equipment", "Person with control over the equipment", "Customer planning to buy the equipment"], answer: "Customer planning to buy the equipment" },
+            { question: "What is the recommended stance for 'distance between feet' in load lifting?", options: ["Feet are kept together.", "Front foot is relaxed, back foot is at a distance and aligned with the carrying direction.", "Feet are wider than shoulder-width.", "Both feet are right under the load."], answer: "Front foot is relaxed, back foot is at a distance and aligned with the carrying direction." },
+            { question: "How are 'circulatory system disorders' explained in display screen work?", options: ["Inactive, prolonged sitting causes blood to pool in the feet and leads to circulatory problems.", "Screen light drops blood pressure.", "Keyboard vibration affects veins.", "Dry air increases blood viscosity."], answer: "Inactive, prolonged sitting causes blood to pool in the feet and leads to circulatory problems." },
+            { question: "What does 'transport information' mean in an MSDS?", options: ["How to return the substance to the supplier", "Rules regarding the transport of the substance by road, rail, air, or sea", "In-house transport procedures", "Shipping terms of the selling company"], answer: "Rules regarding the transport of the substance by road, rail, air, or sea" },
+            { question: "Which statement best summarizes the integrated measure hierarchy in occupational health and safety?", options: ["Starting with PPE and changing the source if necessary.", "First taking measures at the source, then in the environment; using PPE if not enough.", "Only taking technical measures.", "Following legal regulations is enough."], answer: "First taking measures at the source, then in the environment; using PPE if not enough." }
+        ];
+
+        // -------------------------
         // SÖZLÜK KELİME KARTI BİLEŞENİ
         // -------------------------
         const FlashCard = ({ item, isFlipped, onClick, isLarge = false, onDelete }) => {
@@ -740,14 +819,14 @@
             localStorage.setItem('isg_vocab_data', JSON.stringify(vocabData));
           }, [vocabData]);
 
-          // 2. TEST SORULARI
+          // 2. TEST SORULARI - ANAHTARI DEĞİŞTİRDİK Kİ ESKİLER GİTSİN!
           const [customQuestions, setCustomQuestions] = useState(() => {
-            const savedQs = localStorage.getItem('isg_custom_questions');
+            const savedQs = localStorage.getItem('isg_custom_questions_en'); // YENİ ANAHTAR!
             return savedQs ? JSON.parse(savedQs) : INITIAL_QUIZ_QUESTIONS;
           });
 
           useEffect(() => {
-            localStorage.setItem('isg_custom_questions', JSON.stringify(customQuestions));
+            localStorage.setItem('isg_custom_questions_en', JSON.stringify(customQuestions));
           }, [customQuestions]);
 
           // ---- YENİ KELİME EKLEME STATE'LERİ ----
@@ -849,11 +928,22 @@
           };
 
           const resetTest = () => {
+            // Testi Yeniden başlatırken soruları karıştır!
+            const shuffled = [...customQuestions].sort(() => Math.random() - 0.5);
+            // Şıkları da kendi içinde karıştırabiliriz ama şimdilik sadece soruların sırasını karıştıralım.
+            setCustomQuestions(shuffled);
             setCurrentQIndex(0);
             setScore(0);
             setShowTestResult(false);
             setSelectedOption(null);
           };
+
+          // İlk Test Açılışında da karıştır
+          const startTest = () => {
+             resetTest();
+             setView('test');
+             setActiveInfoDeck(false);
+          }
 
           // --- TEST İÇİN MANUEL SORU EKLEME FONKSİYONLARI ---
           const handleAddQuestion = (e) => {
@@ -903,8 +993,8 @@
                         <button onClick={() => setView('learn')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'learn' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                             <i className="fa-solid fa-book-open w-5"></i> Konu Öğrenme
                         </button>
-                        <button onClick={() => {setView('test'); resetTest(); setActiveInfoDeck(false);}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-pen-to-square w-5"></i> Test Çöz
+                        <button onClick={startTest} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                            <i className="fa-solid fa-pen-to-square w-5"></i> İngilizce Test
                         </button>
                     </div>
 
@@ -1016,7 +1106,7 @@
                                     {/* Arka Yüz (Cevap) */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 rotate-y-180 backface-hidden text-white">
                                         <span className="text-amber-100 text-sm font-bold uppercase mb-6 tracking-widest">Cevap / Açıklama</span>
-                                        <h3 className="text-xl md:text-2xl font-bold text-center leading-relaxed">{INFO_CARDS_DATA[infoIndex].a}</h3>
+                                        <h3 className="text-xl md:text-2xl font-bold text-center leading-relaxed overflow-y-auto custom-scrollbar">{INFO_CARDS_DATA[infoIndex].a}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -1061,7 +1151,7 @@
                     )
                 )}
 
-                {/* MOD 4: TEST (QUIZ) ve SORU EKLEME */}
+                {/* MOD 4: ENGLISH TEST (QUIZ) ve SORU EKLEME */}
                 {view === 'test' && (
                     <div className="max-w-3xl mx-auto space-y-8">
                         
@@ -1069,8 +1159,8 @@
                             {!showTestResult ? (
                                 <div>
                                     <div className="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
-                                        <span>Soru {currentQIndex + 1} / {customQuestions.length}</span>
-                                        <span className="text-green-500">Skor: {score}</span>
+                                        <span>Question {currentQIndex + 1} / {customQuestions.length}</span>
+                                        <span className="text-green-500">Score: {score}</span>
                                     </div>
                                     <h3 className="text-2xl font-bold text-slate-800 mb-8">{customQuestions[currentQIndex].question}</h3>
                                     <div className="space-y-3">
@@ -1100,10 +1190,10 @@
                                     <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
                                         <i className="fa-solid fa-trophy"></i>
                                     </div>
-                                    <h2 className="text-3xl font-black text-slate-800 mb-2">Test Bitti!</h2>
-                                    <p className="text-xl text-slate-600 mb-8">Doğru Sayısı: <span className="font-bold text-green-600">{score}</span> / {customQuestions.length}</p>
+                                    <h2 className="text-3xl font-black text-slate-800 mb-2">Test Finished!</h2>
+                                    <p className="text-xl text-slate-600 mb-8">Correct Answers: <span className="font-bold text-green-600">{score}</span> / {customQuestions.length}</p>
                                     <button onClick={resetTest} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">
-                                        Yeniden Çöz
+                                        Take the Test Again
                                     </button>
                                 </div>
                             )}
@@ -1111,27 +1201,27 @@
 
                         <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200">
                             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <i className="fa-solid fa-circle-plus text-blue-600"></i> Kendi Sorunu Ekle (Hafızaya Kaydolur)
+                                <i className="fa-solid fa-circle-plus text-blue-600"></i> Add Your Own Question (Saved in Memory)
                             </h3>
                             <form onSubmit={handleAddQuestion} className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Soru Metni</label>
-                                    <textarea required value={newQText} onChange={(e) => setNewQText(e.target.value)} className="w-full p-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24" placeholder="Soru yazınız..."></textarea>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Question Text (English)</label>
+                                    <textarea required value={newQText} onChange={(e) => setNewQText(e.target.value)} className="w-full p-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24" placeholder="Write the question here..."></textarea>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {newQOptions.map((opt, i) => (
                                         <div key={i}>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Şık {String.fromCharCode(65 + i)}</label>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Option {String.fromCharCode(65 + i)}</label>
                                             <div className="flex items-center gap-2">
-                                                <input type="radio" name="correctAnswer" checked={newQAnswerIndex === i} onChange={() => setNewQAnswerIndex(i)} className="w-5 h-5 text-blue-600 cursor-pointer" />
-                                                <input required type="text" value={opt} onChange={(e) => handleOptionChange(i, e.target.value)} className="w-full p-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder={`Şık ${String.fromCharCode(65 + i)}...`} />
+                                                <input type="radio" name="correctAnswer" checked={newQAnswerIndex === i} onChange={() => setNewQAnswerIndex(i)} className="w-5 h-5 text-blue-600 cursor-pointer" title="Select if this is the correct answer" />
+                                                <input required type="text" value={opt} onChange={(e) => handleOptionChange(i, e.target.value)} className="w-full p-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder={`Option ${String.fromCharCode(65 + i)}...`} />
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                                <p className="text-xs text-slate-500 italic">Doğru cevabı belirtmek için şıkkın yanındaki yuvarlağı seçin.</p>
+                                <p className="text-xs text-slate-500 italic">Select the circle next to the correct option to mark it as the answer.</p>
                                 <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-black transition-colors">
-                                    Soruyu Teste Ekle
+                                    Add Question to the Test
                                 </button>
                             </form>
                         </div>
