@@ -1,1302 +1,221 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İSG Flashcards & Quiz - Hacettepe AI</title>
-    
-    <!-- Gerekli Kütüphaneler (CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- İkonlar: FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, RotateCcw, Info, Layout } from 'lucide-react';
+
+const INITIAL_FORMULAS = [
+  { id: 1, title: "Sonsuz uzun telin elektrik alanı", formula: "E = \\frac{2k\\lambda}{r}" },
+  { id: 2, title: "Sonsuz geniş yalıtkan levhanın elektrik alanı", formula: "E = \\frac{\\sigma}{2\\epsilon_0}" },
+  { id: 3, title: "Elektriksel Akı", formula: "\\Phi_E = \\int \\vec{E} \\cdot d\\vec{A}" },
+  { id: 4, title: "Gauss Yasası", formula: "\\Phi_E = \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{iç}}{\\epsilon_0}" },
+  { id: 5, title: "İletken yüzeyin hemen dışındaki elektrik alan", formula: "E = \\frac{\\sigma}{\\epsilon_0}" },
+  { id: 6, title: "İki nokta arasında potansiyel fark", formula: "\\Delta V = -\\int_A^B \\vec{E} \\cdot d\\vec{l}" },
+  { id: 7, title: "Elektriksel kuvvetin yaptığı iş", formula: "W = -\\Delta U = -q \\Delta V" },
+  { id: 8, title: "Potansiyelden Elektrik Alana geçiş", formula: "E = -\\nabla V" },
+  { id: 9, title: "Dipol momenti", formula: "p = qd" },
+  { id: 10, title: "Dipol torku", formula: "\\vec{\\tau} = \\vec{p} \\times \\vec{E}" },
+  { id: 11, title: "Dipolün potansiyel enerjisi", formula: "U = -\\vec{p} \\cdot \\vec{E}" },
+  { id: 12, title: "Paralel plakalı kondansatör sığası", formula: "C = \\kappa \\epsilon_0 \\frac{A}{d}" },
+  { id: 13, title: "Silindirik kondansatör sığası", formula: "C = \\frac{2\\pi\\epsilon_0 L}{\\ln(b/a)}" },
+  { id: 14, title: "Küresel kondansatör sığası", formula: "C = 4\\pi\\epsilon_0 \\frac{ab}{b-a}" },
+  { id: 15, title: "İzole küresel kondansatör sığası", formula: "C = \\frac{R}{k}" },
+  { id: 16, title: "Kondansatörde depolanan enerji", formula: "U = \\frac{1}{2} C (\\Delta V)^2" },
+  { id: 17, title: "Elektrik alanın enerji yoğunluğu", formula: "u = \\frac{1}{2} \\kappa \\epsilon_0 E^2" },
+  { id: 18, title: "Akım şiddeti", formula: "I = \\frac{dq}{dt}" },
+  { id: 19, title: "Akım yoğunluğu ve sürüklenme hızı", formula: "J = \\frac{I}{A} = n v_d e" },
+  { id: 20, title: "Direnç formülü", formula: "R = \\rho \\frac{L}{A}" },
+  { id: 21, title: "İletkenlik (Direnç türünden)", formula: "\\sigma = \\frac{1}{\\rho}" },
+  { id: 22, title: "Ohm Yasası (Alan formu)", formula: "E = \\rho J" },
+  { id: 23, title: "Isıya dönüşen enerji hızı (Güç)", formula: "P = I V" },
+  { id: 24, title: "Harcanan toplam enerji", formula: "E = P t" }
+];
+
+// Helper to render LaTeX using simple HTML/CSS for common physics symbols 
+const FormulaDisplay = ({ formula }) => {
+  useEffect(() => {
+    if (window.renderMathInElement) {
+        window.renderMathInElement(document.body);
+    }
+  }, [formula]);
+
+  return (
+    <div className="text-2xl md:text-3xl font-serif text-center break-words px-4">
+      {`$$ ${formula} $$`}
+    </div>
+  );
+};
+
+const App = () => {
+  const [deck, setDeck] = useState([...INITIAL_FORMULAS]);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [stats, setStats] = useState({ correct: 0, wrong: 0 });
+
+  // Load KaTeX for better formula rendering
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js';
+    script.async = true;
+    script.onload = () => {
+        const autoRenderScript = document.createElement('script');
+        autoRenderScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js';
+        autoRenderScript.async = true;
+        autoRenderScript.onload = () => {
+            window.renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ]
+            });
+        };
+        document.head.appendChild(autoRenderScript);
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  const handleCorrect = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      const newDeck = [...deck];
+      newDeck.shift();
+      setDeck(newDeck);
+      setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+      if (newDeck.length === 0) setFinished(true);
+    }, 150);
+  };
+
+  const handleWrong = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      const newDeck = [...deck];
+      const currentCard = newDeck.shift();
+      
+      const targetIndex = Math.min(4, newDeck.length);
+      newDeck.splice(targetIndex, 0, currentCard);
+      
+      setDeck(newDeck);
+      setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
+    }, 150);
+  };
+
+  const resetGame = () => {
+    setDeck([...INITIAL_FORMULAS].sort(() => Math.random() - 0.5));
+    setFinished(false);
+    setIsFlipped(false);
+    setStats({ correct: 0, wrong: 0 });
+  };
+
+  if (finished) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-800">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-6">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle size={48} />
+          </div>
+          <h1 className="text-3xl font-bold">Tebrikler!</h1>
+          <p className="text-slate-600">Bütün formülleri başarıyla tamamladın.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-50 p-4 rounded-xl">
+              <div className="text-sm text-slate-500 uppercase font-semibold">Doğru</div>
+              <div className="text-2xl font-bold text-green-600">{stats.correct}</div>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-xl">
+              <div className="text-sm text-slate-500 uppercase font-semibold">Yanlış</div>
+              <div className="text-2xl font-bold text-red-500">{stats.wrong}</div>
+            </div>
+          </div>
+          <button 
+            onClick={resetGame}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
+            <RotateCcw size={20} /> Yeniden Başla
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentCard = deck[0];
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 md:p-8 font-sans text-slate-800">
+      <div className="w-full max-w-xl flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-xl font-bold flex items-center gap-2 text-indigo-900">
+            <Layout className="text-indigo-600" size={24} />
+            Fizik Flashcards
+          </h1>
+          <p className="text-sm text-slate-500">Elektrik ve Manyetizma</p>
+        </div>
+        <div className="text-right">
+          <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
+            {deck.length} kart kaldı
+          </span>
+        </div>
+      </div>
+
+      <div className="w-full max-w-xl h-2 bg-slate-200 rounded-full mb-12 overflow-hidden">
+        <div 
+          className="h-full bg-indigo-600 transition-all duration-500"
+          style={{ width: `${((INITIAL_FORMULAS.length - deck.length) / INITIAL_FORMULAS.length) * 100}%` }}
+        ></div>
+      </div>
+
+      <div className="relative w-full max-w-md perspective-1000 h-96 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+        <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+          <div className="absolute inset-0 backface-hidden bg-white rounded-3xl shadow-2xl border-b-4 border-indigo-200 flex flex-col items-center justify-center p-8 text-center group">
+            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-400 transition-colors">
+              <Info size={24} />
+            </div>
+            <p className="text-sm text-indigo-500 font-bold uppercase tracking-wider mb-4">Soru</p>
+            <h2 className="text-2xl md:text-3xl font-semibold leading-tight">
+              {currentCard?.title}
+            </h2>
+            <p className="mt-8 text-slate-400 text-sm italic">Cevabı görmek için tıkla</p>
+          </div>
+
+          <div className="absolute inset-0 backface-hidden bg-indigo-900 rounded-3xl shadow-2xl rotate-y-180 flex flex-col items-center justify-center p-8 text-white border-b-4 border-indigo-950">
+            <p className="text-sm text-indigo-300 font-bold uppercase tracking-wider mb-8">Formül</p>
+            <div className="w-full bg-white/10 p-6 rounded-2xl backdrop-blur-sm">
+              <FormulaDisplay formula={currentCard?.formula} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`mt-12 flex gap-6 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <button 
+          onClick={(e) => { e.stopPropagation(); handleWrong(); }}
+          className="flex flex-col items-center gap-2 group"
+        >
+          <div className="w-16 h-16 bg-white border-2 border-red-200 text-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-red-500 group-hover:text-white transition-all transform active:scale-95">
+            <XCircle size={32} />
+          </div>
+          <span className="text-sm font-bold text-slate-600">Yanlış</span>
+        </button>
+
+        <button 
+          onClick={(e) => { e.stopPropagation(); handleCorrect(); }}
+          className="flex flex-col items-center gap-2 group"
+        >
+          <div className="w-16 h-16 bg-white border-2 border-green-200 text-green-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-green-500 group-hover:text-white transition-all transform active:scale-95">
+            <CheckCircle size={32} />
+          </div>
+          <span className="text-sm font-bold text-slate-600">Doğru</span>
+        </button>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
         .perspective-1000 { perspective: 1000px; }
-        .preserve-3d { transform-style: preserve-3d; }
+        .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    </style>
-</head>
-<body class="bg-slate-50">
-    <div id="root"></div>
+      `}} />
+    </div>
+  );
+};
 
-    <script type="text/babel">
-        const { useState, useMemo, useEffect } = React;
-
-        // -------------------------
-        // 1. BAŞLANGIÇ KELİME VERİ SETİ
-        // -------------------------
-        const INITIAL_VOCAB_DATA = {
-          "A – KİMYASALLAR": [
-            { en: "chemical substance", tr: "kimyasal madde" },
-            { en: "element", tr: "element, unsur" },
-            { en: "compound", tr: "bileşik" },
-            { en: "mixture", tr: "karışım" },
-            { en: "waste", tr: "atık" },
-            { en: "placed on the market", tr: "piyasaya arz edilen" },
-            { en: "regardless of", tr: "bakılmaksızın, fark etmeksizin" },
-            { en: "hazardous", tr: "tehlikeli" },
-            { en: "hazardous chemical", tr: "tehlikeli kimyasal" },
-            { en: "acute", tr: "akut, ani başlangıçlı" },
-            { en: "chronic", tr: "kronik, uzun süreli" },
-            { en: "harm", tr: "zarar, hasar" },
-            { en: "damage", tr: "hasar, hasar vermek" },
-            { en: "environment", tr: "çevre" },
-            { en: "health", tr: "sağlık" },
-            { en: "safety", tr: "güvenlik" },
-            { en: "exposure", tr: "maruziyet" },
-            { en: "duration of exposure", tr: "maruziyet süresi" },
-            { en: "properties", tr: "özellikler" },
-            { en: "physical and chemical properties", tr: "fiziksel ve kimyasal özellikler" },
-            { en: "characteristics", tr: "özellikler, nitelikler" },
-            { en: "pesticides", tr: "böcek ilaçları, pestisitler" },
-            { en: "regulation", tr: "yönetmelik" }
-          ],
-          "B – VÜCUDA GİRİŞ YOLLARI": [
-            { en: "inhalation", tr: "soluma, inhalasyon" },
-            { en: "absorption", tr: "emilim, absorpsiyon" },
-            { en: "ingestion", tr: "yutma, sindirim yoluyla alma" },
-            { en: "skin", tr: "deri" },
-            { en: "airway", tr: "hava yolu" }
-          ],
-          "C – RİSK ÖNLEMLERİ": [
-            { en: "risk measure", tr: "risk önlemi" },
-            { en: "substitution", tr: "ikame, değiştirme" },
-            { en: "closed system", tr: "kapalı sistem" },
-            { en: "local exhaust ventilation", tr: "lokal aspirasyon / havalandırma sistemi" },
-            { en: "aspiration", tr: "aspirasyon, çekme" },
-            { en: "dilution", tr: "seyreltme" },
-            { en: "fresh air", tr: "taze hava" },
-            { en: "personal protective equipment (PPE)", tr: "kişisel koruyucu donanım (KKD)" },
-            { en: "goggles", tr: "koruyucu gözlük" },
-            { en: "mask", tr: "maske" },
-            { en: "gloves", tr: "eldiven" },
-            { en: "hard hat", tr: "baret" },
-            { en: "chemical hazard", tr: "kimyasal tehlike" },
-            { en: "awareness", tr: "farkındalık" },
-            { en: "periodic maintenance", tr: "periyodik bakım" },
-            { en: "continuous", tr: "sürekli" },
-            { en: "layout", tr: "düzen, yerleşim" }
-          ],
-          "D – DEPOLAMA": [
-            { en: "storage", tr: "depolama" },
-            { en: "storage rack", tr: "depolama rafı" },
-            { en: "spill", tr: "dökülme" },
-            { en: "spill prevention", tr: "dökülme önleme" },
-            { en: "interacting chemicals", tr: "birbiriyle reaksiyona giren kimyasallar" },
-            { en: "barrel", tr: "varil" },
-            { en: "drum", tr: "büyük varil içi" },
-            { en: "pollution", tr: "kirlilik, çevre kirliliği" },
-            { en: "eye shower", tr: "göz duşu" },
-            { en: "absorbent material", tr: "emici malzeme" },
-            { en: "container", tr: "kap, konteyner" },
-            { en: "label", tr: "etiket" },
-            { en: "labelled", tr: "etiketlenmiş" }
-          ],
-          "E – MSDS (GÜVENLİK FORMU)": [
-            { en: "Material Safety Data Sheet (MSDS)", tr: "Malzeme Güvenlik Bilgi Formu (MGBF)" },
-            { en: "hazard description", tr: "tehlike tanımı" },
-            { en: "composition", tr: "bileşim" },
-            { en: "ingredients", tr: "içerik, bileşenler" },
-            { en: "first aid measures", tr: "ilk yardım önlemleri" },
-            { en: "fire fighting measures", tr: "yangınla mücadele önlemleri" },
-            { en: "accidental spread", tr: "kaza sonucu yayılma" },
-            { en: "handling", tr: "elleçleme, taşıma" },
-            { en: "exposure controls", tr: "maruziyet kontrolleri" },
-            { en: "stability", tr: "kararlılık" },
-            { en: "toxicological", tr: "toksikolojik" },
-            { en: "ecological", tr: "ekolojik" },
-            { en: "disposal", tr: "bertaraf, imha" },
-            { en: "transport information", tr: "taşımacılık bilgisi" },
-            { en: "legislation", tr: "mevzuat, yasal düzenleme" },
-            { en: "legal requirement", tr: "yasal zorunluluk" }
-          ],
-          "F – GÜRÜLTÜ (NOISE)": [
-            { en: "noise", tr: "gürültü" },
-            { en: "sound", tr: "ses" },
-            { en: "sound level", tr: "ses düzeyi" },
-            { en: "decibel (dB)", tr: "desibel" },
-            { en: "frequency", tr: "frekans" },
-            { en: "hearing loss", tr: "işitme kaybı" },
-            { en: "disturbing", tr: "rahatsız edici" },
-            { en: "undesirable", tr: "istenmeyen" },
-            { en: "whisper", tr: "fısıltı" },
-            { en: "rainfall", tr: "yağmur sesi" },
-            { en: "exhaust", tr: "egzoz" },
-            { en: "vacuum cleaner", tr: "elektrikli süpürge" },
-            { en: "heavy traffic", tr: "yoğun trafik" },
-            { en: "alarm clock", tr: "çalar saat" },
-            { en: "factory noise", tr: "fabrika gürültüsü" },
-            { en: "lawn mower", tr: "çim biçme makinesi" },
-            { en: "chainsaw", tr: "motorlu testere" },
-            { en: "drill hammer", tr: "matkap çekici" },
-            { en: "shotgun", tr: "av tüfeği" },
-            { en: "rocket launcher", tr: "roket fırlatıcı" },
-            { en: "combating noise", tr: "gürültüyle mücadele" },
-            { en: "active technical measures", tr: "aktif teknik önlemler" },
-            { en: "passive technical measures", tr: "pasif teknik önlemler" },
-            { en: "soundproof", tr: "ses geçirmez" },
-            { en: "soundproof walls", tr: "ses geçirmez duvarlar" },
-            { en: "soundproof materials", tr: "ses geçirmez malzemeler" },
-            { en: "reflect sound", tr: "ses yansıtmak" },
-            { en: "minimize vibration", tr: "titreşimi en aza indirmek" },
-            { en: "audiometry", tr: "odyometri (işitme testi)" },
-            { en: "audiometer", tr: "odyometre" },
-            { en: "hearing acuity", tr: "işitme keskinliği" },
-            { en: "weekly noise exposure level", tr: "haftalık gürültü maruziyet düzeyi" },
-            { en: "exposure limit value", tr: "maruziyet limit değeri" }
-          ],
-          "G – TİTREŞİM (VIBRATION)": [
-            { en: "vibration", tr: "titreşim" },
-            { en: "mechanical oscillation", tr: "mekanik salınım" },
-            { en: "balance point", tr: "denge noktası" },
-            { en: "unwanted movement", tr: "istenmeyen hareket" },
-            { en: "energy", tr: "enerji" },
-            { en: "hand-arm vibration", tr: "el-kol titreşimi" },
-            { en: "hand-arm vibration syndrome", tr: "el-kol titreşim sendromu" },
-            { en: "vibration white finger", tr: "titreşim beyaz parmak sendromu" },
-            { en: "dead finger", tr: "ölü parmak" },
-            { en: "Raynaud's syndrome", tr: "Raynaud Sendromu" },
-            { en: "industrial injury", tr: "endüstriyel yaralanma / meslek hastalığı" },
-            { en: "triggered by", tr: "tarafından tetiklenen" },
-            { en: "continuous use", tr: "sürekli kullanım" },
-            { en: "vibrating hand-held machinery", tr: "titreşimli el aletleri" },
-            { en: "elbow joint", tr: "dirsek eklemi" },
-            { en: "bent", tr: "bükülü, eğimli" },
-            { en: "tendency", tr: "eğilim" },
-            { en: "grasp", tr: "kavramak, tutmak" }
-          ],
-          "H – AYDINLATMA (LIGHTING)": [
-            { en: "lighting", tr: "aydınlatma" },
-            { en: "illuminated", tr: "aydınlatılmış" },
-            { en: "daylight", tr: "gün ışığı" },
-            { en: "artificial light", tr: "yapay ışık" },
-            { en: "sufficient", tr: "yeterli" },
-            { en: "adequate", tr: "yeterli, uygun" },
-            { en: "intensity", tr: "yoğunluk" },
-            { en: "constant", tr: "sabit, değişmeyen" },
-            { en: "well spread", tr: "iyi dağılmış" },
-            { en: "shade (shadow)", tr: "gölge" },
-            { en: "reflection", tr: "yansıma" },
-            { en: "dazzling", tr: "göz kamaştırıcı" },
-            { en: "glare", tr: "göz kamaşması, parlama" },
-            { en: "inappropriate", tr: "uygunsuz" },
-            { en: "insufficient", tr: "yetersiz" },
-            { en: "stretch the nerves", tr: "sinirleri germek" },
-            { en: "fatigue", tr: "yorgunluk" },
-            { en: "vision efficiency", tr: "görme verimliliği" },
-            { en: "economic losses", tr: "ekonomik kayıplar" },
-            { en: "direct lighting", tr: "doğrudan aydınlatma" },
-            { en: "indirect lighting", tr: "dolaylı aydınlatma" },
-            { en: "semi-direct / local lighting", tr: "yarı doğrudan / yerel aydınlatma" }
-          ],
-          "I – TERMAL KONFOR": [
-            { en: "temperature", tr: "sıcaklık" },
-            { en: "thermal comfort", tr: "termal konfor" },
-            { en: "satisfaction", tr: "memnuniyet" },
-            { en: "subjective", tr: "öznel" },
-            { en: "humidity", tr: "nem" },
-            { en: "air velocity", tr: "hava hızı" },
-            { en: "heat transfer", tr: "isi transferi" },
-            { en: "molecular motion", tr: "moleküler hareket" },
-            { en: "dry thermometer", tr: "kuru termometre / cıvalı termometre" },
-            { en: "ventilated", tr: "havalandırılmış" },
-            { en: "relative humidity", tr: "bağıl nem" }
-          ],
-          "J – BASINÇ (PRESSURE)": [
-            { en: "pressure", tr: "basınç" },
-            { en: "perpendicular", tr: "dik" },
-            { en: "unit area", tr: "birim alan" },
-            { en: "atmospheric pressure", tr: "atmosferik basınç" },
-            { en: "sea level", tr: "deniz seviyesi" },
-            { en: "mercury", tr: "cıva" },
-            { en: "circulatory", tr: "dolaşımsal" },
-            { en: "respiratory", tr: "solunumsal" },
-            { en: "distress", tr: "sıkıntı" }
-          ],
-          "K – RADYASYON (RADIATION)": [
-            { en: "radiation", tr: "radyasyon" },
-            { en: "emitted", tr: "yayılan" },
-            { en: "particles", tr: "parçacıklar" },
-            { en: "medium", tr: "ortam" },
-            { en: "absorbed", tr: "emilmiş" },
-            { en: "ionizing radiation", tr: "iyonize radyasyon" },
-            { en: "non-ionizing radiation", tr: "iyonize olmayan radyasyon" },
-            { en: "cosmic rays", tr: "kozmik ışınlar" },
-            { en: "X rays", tr: "X ışınları" },
-            { en: "radioactive materials", tr: "radyoaktif maddeler" },
-            { en: "radiant heat", tr: "radyant ısı" },
-            { en: "radio waves", tr: "radyo dalgaları" },
-            { en: "microwaves", tr: "mikrodalgalar" },
-            { en: "terahertz radiation", tr: "terahertz radyasyonu" },
-            { en: "infrared light", tr: "kızılötesi ışık" },
-            { en: "ultraviolet light", tr: "ultraviyole ışık" },
-            { en: "natural radiation sources", tr: "doğal radyasyon kaynakları" },
-            { en: "artificial radiation sources", tr: "yapay radyasyon kaynakları" },
-            { en: "radioactive elements", tr: "radyoaktif elementler" },
-            { en: "half-life", tr: "yarı ömür" },
-            { en: "radio isotopes", tr: "radio izotoplar" },
-            { en: "disintegration", tr: "bozunma" },
-            { en: "radon gas", tr: "radon gazı" },
-            { en: "radium", tr: "radyum" },
-            { en: "nuclear power plants", tr: "nükleer güç santralleri" },
-            { en: "atomic bomb", tr: "atom bombası" },
-            { en: "luminescent", tr: "ışıldayan, fosforlu" },
-            { en: "phosphate rocks", tr: "fosfat kayaçları" },
-            { en: "shielding", tr: "zırhlama, kalkan" },
-            { en: "barrier", tr: "bariyer" },
-            { en: "dose", tr: "doz" },
-            { en: "dose intensity", tr: "doz yoğunluğu" },
-            { en: "inversely proportional", tr: "ters orantılı" }
-          ],
-          "L – ERGONOMİ (ERGONOMICS)": [
-            { en: "ergonomics", tr: "ergonomi" },
-            { en: "ergonomists", tr: "ergonomist" },
-            { en: "abilities", tr: "yetenekler" },
-            { en: "limitations", tr: "sınırlamalar" },
-            { en: "interaction", tr: "etkileşim" },
-            { en: "workplace design", tr: "işyeri tasarımı" },
-            { en: "hand tools", tr: "el aletleri" },
-            { en: "working hours", tr: "çalışma saatleri" },
-            { en: "shift", tr: "vardiya" },
-            { en: "break times", tr: "mola süreleri" },
-            { en: "food regime", tr: "beslenme düzeni" },
-            { en: "ideal sitting", tr: "ideal oturma" },
-            { en: "spine", tr: "omurga" },
-            { en: "orthopaedic", tr: "ortopedik" },
-            { en: "heater / radiator", tr: "radyatör" },
-            { en: "bronchitis", tr: "bronşit" },
-            { en: "allergic sensitivity", tr: "alerjik duyarlılık" },
-            { en: "conjunctivitis", tr: "konjonktivit (göz iltihabı)" },
-            { en: "charged particles", tr: "yüklü parçacıklar" },
-            { en: "negative electric charge", tr: "negatif elektrik yükü" },
-            { en: "dynamic", tr: "dinamik" },
-            { en: "chronic discomfort", tr: "kronik rahatsızlık" },
-            { en: "cramps", tr: "kramplar" },
-            { en: "muscle aches", tr: "kas ağrıları" },
-            { en: "strains", tr: "zorlama, gerilme" }
-          ],
-          "M – EGZERSİZ VE BEL AĞRISI": [
-            { en: "office exercises", tr: "ofis egzersizleri" },
-            { en: "circular motion", tr: "dairesel hareket" },
-            { en: "tension", tr: "gerginlik" },
-            { en: "stretch", tr: "germek, esnetmek" },
-            { en: "elbow", tr: "dirsek" },
-            { en: "wrist", tr: "bilek" },
-            { en: "ankle", tr: "ayak bileği" },
-            { en: "palm", tr: "avuç içi" },
-            { en: "backrest", tr: "sırt desteği" },
-            { en: "protective ergonomic principles", tr: "koruyucu ergonomik ilkeler" },
-            { en: "low back pain", tr: "bel ağrısı" },
-            { en: "stool", tr: "tabure" },
-            { en: "supine position", tr: "sırtüstü pozisyon" },
-            { en: "pillow", tr: "yastık" },
-            { en: "lumbar region", tr: "bel bölgesi" },
-            { en: "lean", tr: "eğilmek" },
-            { en: "hip", tr: "kalça" },
-            { en: "knee", tr: "diz" },
-            { en: "frequency", tr: "sıklık" }
-          ],
-          "N – MANUEL TAŞIMA": [
-            { en: "manual handling", tr: "el ile taşıma / manuel taşıma" },
-            { en: "lifting", tr: "kaldırma" },
-            { en: "lowering", tr: "indirme" },
-            { en: "pushing", tr: "itme" },
-            { en: "pulling", tr: "çekme" },
-            { en: "carrying", tr: "taşıma" },
-            { en: "moving a load", tr: "yük hareket ettirme" },
-            { en: "ergonomic conditions", tr: "ergonomik koşullar" },
-            { en: "load", tr: "yük" },
-            { en: "unstable", tr: "dengesiz" },
-            { en: "contents", tr: "içerik" },
-            { en: "displaced", tr: "kaymış, yerinden oynamış" },
-            { en: "intensity", tr: "yoğunluk" },
-            { en: "crash", tr: "çarpışma" },
-            { en: "tiring", tr: "yorucu" },
-            { en: "bending", tr: "bükme, eğilme" },
-            { en: "unstable position", tr: "dengesiz pozisyon" },
-            { en: "uneven (ground)", tr: "engebeli, düzensiz (zemin)" },
-            { en: "slipping", tr: "kaymak" },
-            { en: "height difference", tr: "yükseklik farkı" },
-            { en: "individual risk factors", tr: "bireysel risk faktörleri" },
-            { en: "physical structure", tr: "fiziksel yapı" },
-            { en: "unsuitable", tr: "uygunsuz" },
-            { en: "auxiliary equipment", tr: "yardımcı ekipman" },
-            { en: "lever", tr: "kaldıraç" },
-            { en: "wedge", tr: "kama" },
-            { en: "obstacle", tr: "engel" },
-            { en: "shoulder length", tr: "omuz genişliği" },
-            { en: "balanced", tr: "dengeli, dengelenmiş" },
-            { en: "stable surface", tr: "kararlı yüzey" },
-            { en: "firmly", tr: "sağlam biçimde" },
-            { en: "unloading", tr: "indirme / boşaltma" }
-          ],
-          "O – İŞ EKİPMANLARI": [
-            { en: "safe use of work equipment", tr: "iş ekipmanlarının güvenli kullanımı" },
-            { en: "CE mark / CE symbol", tr: "CE işareti" },
-            { en: "product legislation", tr: "ürün mevzuatı" },
-            { en: "employment legislation", tr: "istihdam mevzuatı" },
-            { en: "free movement of goods", tr: "malların serbest dolaşımı" },
-            { en: "manufacturer", tr: "üretici" },
-            { en: "end users", tr: "son kullanıcı" },
-            { en: "declaration of conformity", tr: "uygunluk beyannamesi" },
-            { en: "standard", tr: "standart" },
-            { en: "assembly", tr: "montaj, kurulum" },
-            { en: "significantly modified", tr: "önemli ölçüde değiştirilmiş" },
-            { en: "duty", tr: "yükümlülük" },
-            { en: "provision", tr: "sağlama, temin etme" },
-            { en: "inspection", tr: "muayene, denetim" },
-            { en: "maintenance", tr: "bakım" },
-            { en: "maintenance log", tr: "bakım günlüğü" },
-            { en: "efficient", tr: "verimli" },
-            { en: "efficient working order", tr: "verimli çalışır durumda" },
-            { en: "repair", tr: "onarım" },
-            { en: "installation", tr: "kurulum" },
-            { en: "deterioration", tr: "bozulma" },
-            { en: "risk assessment", tr: "risk değerlendirmesi" },
-            { en: "suitability", tr: "uygunluk" },
-            { en: "stabilized", tr: "sabitlenmiş" },
-            { en: "clamping", tr: "kelepçeleme" },
-            { en: "alert", tr: "uyarı" },
-            { en: "warning device", tr: "uyarı cihazı" },
-            { en: "locking device", tr: "kilitleme cihazı" },
-            { en: "mechanical change", tr: "mekanik değişiklik" },
-            { en: "electrical change", tr: "elektrik değişiklik" },
-            { en: "software change", tr: "yazılım değişikliği" },
-            { en: "lubrication", tr: "yağlama" },
-            { en: "revision", tr: "revizyon" },
-            { en: "re-design", tr: "yeniden tasarım" },
-            { en: "isolation", tr: "izolasyon, ayrıştırma" },
-            { en: "emergency stop", tr: "acil durdurma" },
-            { en: "rupture", tr: "kopma, yırtılma" },
-            { en: "disintegration", tr: "parçalanma" },
-            { en: "overheating", tr: "aşırı ısınma" },
-            { en: "scars", tr: "yara izleri, skarlar" }
-          ],
-          "P – EKRANLI ARAÇLAR": [
-            { en: "display screen device", tr: "ekranlı araç" },
-            { en: "monitor", tr: "monitör" },
-            { en: "keyboard", tr: "klavye" },
-            { en: "mouse", tr: "fare" },
-            { en: "work surface / work table", tr: "çalışma yüzeyi / masası" },
-            { en: "work chair", tr: "çalışma sandalyesi" },
-            { en: "character", tr: "karakter / harf" },
-            { en: "flicker / flickering", tr: "titreme" },
-            { en: "stable (image)", tr: "kararlı (görüntü)" },
-            { en: "brightness", tr: "parlaklık" },
-            { en: "contrast", tr: "kontrast" },
-            { en: "adjustable", tr: "ayarlanabilir" },
-            { en: "separate base", tr: "ayrı taban" },
-            { en: "reflections", tr: "yansımalar" },
-            { en: "opaque", tr: "mat, opak" },
-            { en: "legible", tr: "okunabilir" },
-            { en: "wrist rest", tr: "bilek desteği" },
-            { en: "document holder", tr: "belge tutucu" },
-            { en: "backrest", tr: "sırt desteği" },
-            { en: "foot rest", tr: "ayak desteği" },
-            { en: "repetition", tr: "tekrarlama" },
-            { en: "improper posture", tr: "uygunsuz duruş" },
-            { en: "excess workload", tr: "aşırı iş yükü" },
-            { en: "unsupported", tr: "desteksiz" },
-            { en: "musculoskeletal diseases", tr: "kas-iskelet hastalıkları" },
-            { en: "eyesight problems", tr: "göz sorunları" },
-            { en: "nervous system disorders", tr: "sinir sistemi bozuklukları" },
-            { en: "circulatory system disorders", tr: "dolaşım sistemi bozuklukları" },
-            { en: "psychological disorders", tr: "psikolojik bozukluklar" },
-            { en: "digestive system disorders", tr: "sindirim sistemi bozuklukları" },
-            { en: "myopia", tr: "miyopi (uzağı görememe)" },
-            { en: "astigmatism", tr: "astigmat" },
-            { en: "numbness", tr: "uyuşma" },
-            { en: "redness", tr: "kızarıklık" },
-            { en: "concentration", tr: "konsantrasyon" },
-            { en: "blinking", tr: "göz kırpma" },
-            { en: "periodic health checks", tr: "periyodik sağlık kontrolleri" },
-            { en: "workplace doctor", tr: "işyeri hekimi" }
-          ],
-          "R – ELEKTRİK GÜVENLİĞİ": [
-            { en: "electricity", tr: "elektrik" },
-            { en: "electric charge", tr: "elektrik yükü" },
-            { en: "electric current", tr: "elektrik akımı" },
-            { en: "conductor", tr: "iletken" },
-            { en: "ampere", tr: "amper" },
-            { en: "direct current (DC)", tr: "doğru akım" },
-            { en: "alternating current (AC)", tr: "alternatif akım" },
-            { en: "electronic circuit", tr: "elektronik devre" },
-            { en: "battery", tr: "pil, batarya" },
-            { en: "refrigerator", tr: "buzdolabı" },
-            { en: "washing machine", tr: "çamaşır makinesi" },
-            { en: "voltage", tr: "gerilim, voltaj" },
-            { en: "rated voltage", tr: "nominal gerilim" },
-            { en: "low voltage", tr: "alçak gerilim" },
-            { en: "high voltage", tr: "yüksek gerilim" },
-            { en: "phase", tr: "faz" },
-            { en: "fuse", tr: "sigorta" },
-            { en: "overcurrent protection", tr: "aşırı akım koruması" },
-            { en: "overload", tr: "aşırı yük" },
-            { en: "essential component", tr: "temel bileşen" },
-            { en: "melt", tr: "erime" },
-            { en: "circuit", tr: "devre" },
-            { en: "residual current relay / circuit breaker (RCCB)", tr: "kaçak akım rölesi / şalteri" },
-            { en: "leakage current", tr: "kaçak akım" },
-            { en: "shock hazard", tr: "çarpma tehlikesi" },
-            { en: "supply", tr: "besleme, arz" },
-            { en: "return conductor", tr: "dönüş iletkeni" },
-            { en: "indispensable", tr: "vazgeçilmez" },
-            { en: "invisible", tr: "görünmez" },
-            { en: "potential danger", tr: "potansiyel tehlike" },
-            { en: "electric shock", tr: "elektrik çarpması" },
-            { en: "contraction", tr: "kasılma" },
-            { en: "cardiac arrest", tr: "kalp durması (kardiyak arrest)" },
-            { en: "skin burns", tr: "cilt yanıkları" },
-            { en: "rubber-soled shoes", tr: "lastik tabanlı ayakkabı" },
-            { en: "insulating rod", tr: "yalıtım çubuğu" },
-            { en: "conductive objects", tr: "iletken nesneler" },
-            { en: "bare hands", tr: "çıplak eller" },
-            { en: "grounded plug", tr: "topraklı fiş" },
-            { en: "automatic fuse", tr: "otomatik sigorta" },
-            { en: "socket", tr: "priz" },
-            { en: "cracked plug", tr: "çatlak fiş" },
-            { en: "extension cable", tr: "uzatma kablosu" },
-            { en: "insulated", tr: "yalıtımlı" },
-            { en: "pliers", tr: "kerpeten, pense" },
-            { en: "screwdriver", tr: "tornavida" },
-            { en: "non-conductor", tr: "iletken olmayan, yalıtkan" },
-            { en: "portable power tools", tr: "portatif elektrikli aletler" },
-            { en: "loose clothing", tr: "bol giysi" },
-            { en: "sparking", tr: "kıvılcım saçma" },
-            { en: "switching off", tr: "kapatmak, kesmek" },
-            { en: "maintenance and repair", tr: "bakım ve onarım" },
-            { en: "energy source", tr: "enerji kaynağı" },
-            { en: "warning sign", tr: "uyarı işareti" },
-            { en: "electrical panel", tr: "elektrik panosu" }
-          ],
-          "S – GENEL ÖNEMLİ KELİMELER": [
-            { en: "ensure", tr: "sağlamak, garantilemek" },
-            { en: "prevent", tr: "önlemek" },
-            { en: "minimize", tr: "en aza indirmek" },
-            { en: "maximize", tr: "en üst düzeye çıkarmak" },
-            { en: "appropriate", tr: "uygun" },
-            { en: "suitable", tr: "uygun, elverişli" },
-            { en: "available", tr: "mevcut, hazır" },
-            { en: "occur", tr: "meydana gelmek" },
-            { en: "risk", tr: "risk" },
-            { en: "hazard", tr: "tehlike" },
-            { en: "protection", tr: "koruma" },
-            { en: "assessment", tr: "değerlendirme" },
-            { en: "comply with", tr: "uymak, uyum sağlamak" },
-            { en: "requirement", tr: "gereklilik" },
-            { en: "instruction", tr: "talimat" },
-            { en: "manual", tr: "el kitabı, kılavuz" },
-            { en: "employer", tr: "işveren" },
-            { en: "employee", tr: "çalışan" },
-            { en: "workplace", tr: "işyeri" },
-            { en: "occupational health and safety", tr: "iş sağlığı ve güvenliği" },
-            { en: "specialist", tr: "uzman" },
-            { en: "inspection", tr: "denetim, muayene" },
-            { en: "competent", tr: "yetkin, yetkili" },
-            { en: "authority", tr: "yetkili, otorite" },
-            { en: "directive", tr: "direktif" },
-            { en: "obligation", tr: "yükümlülük" },
-            { en: "significant", tr: "önemli, önemli ölçüde" },
-            { en: "implement", tr: "uygulamak" },
-            { en: "measure", tr: "önlem / ölçüm" },
-            { en: "identify", tr: "belirlemek, tespit etmek" },
-            { en: "determine", tr: "belirlemek" },
-            { en: "exposure", tr: "maruziyet" },
-            { en: "risk factor", tr: "risk faktörü" },
-            { en: "result in", tr: "ile sonuçlanmak" },
-            { en: "lead to", tr: "yol açmak" },
-            { en: "due to", tr: "nedeniyle" },
-            { en: "in accordance with", tr: "uygun olarak, göre" },
-            { en: "associated with", tr: "ile ilişkili" },
-            { en: "prior to", tr: "öncesinde" },
-            { en: "therefore", tr: "bu nedenle" },
-            { en: "however", tr: "ancak, bununla birlikte" },
-            { en: "whereas", tr: "oysa, -ken" },
-            { en: "particularly", tr: "özellikle" },
-            { en: "approximately", tr: "yaklaşık olarak" },
-            { en: "classified", tr: "sınıflandırılmış" },
-            { en: "defined as", tr: "olarak tanımlanmış" },
-            { en: "referred to as", tr: "olarak adlandırılan" },
-            { en: "according to", tr: "göre" },
-            { en: "in terms of", tr: "açısından" }
-          ]
-        };
-
-        // -------------------------
-        // 2. KAPSAMLI KONU ÖĞRENME (Ders Notları Özetleri - 100 Bilgi Kartından Beslenir)
-        // -------------------------
-        const LECTURE_DATA = [
-            {
-                title: "Kimyasal Risk Faktörleri ve MGBF",
-                content: "Kimyasallar vücuda inhalasyon (solunum), absorpsiyon (emilim) ve yutma (sindirim) yoluyla girer. Tehlikenin boyutunu belirleyen 4 faktör: fiziksel-kimyasal özellikler, maruziyet şekli/süresi, kişi özellikleri ve fiziksel ortamdır. Önlem hiyerarşisi: Önce Kaynak (ikame, kapalı sistem), sonra Ortam (havalandırma) ve en son Kişisel (KKD) önlemlerdir. Reaksiyona giren maddeler yan yana depolanmaz. Göz duşu ve 16 başlıklı Malzeme Güvenlik Bilgi Formu (MGBF) zorunludur. Toksikolojik (sağlığa etki) ve ekolojik (çevreye etki) bilgiler MGBF'de yer alır."
-            },
-            {
-                title: "Fiziksel Riskler: Gürültü ve Titreşim",
-                content: "Gürültü için haftalık maruziyet limiti 87 dB'dir. 85 dB ve üzeri ortamlarda günde en fazla 7,5 saat çalışılabilir. Normal ofis 50 dB, insan konuşması 60 dB, rock konseri 110 dB'dir. Tıbbi önlem olarak 'odyometri' (işitme testi) yapılır. Titreşim ise mekanik salınımdır. El-kol titreşimi 'Titreşim Beyaz Parmak' (Raynaud / Dead Finger) sendromuna yol açar. Titreşimli alet sıkı kavranmamalı, dirsek bükülmemelidir (bükülürse titreşim üst kola daha fazla aktarılır)."
-            },
-            {
-                title: "Aydınlatma, Termal Konfor ve Radyasyon",
-                content: "İyi aydınlatma göz kamaştırmaz, sabit ve yeterli yoğunluktadır, gölge oluşturmaz. Yetersiz aydınlatma ekonomik kayba ve kazalara yol açar. Termal konfor; sıcaklık, nem ve hava hızına bağlıdır (Önerilen nem %70, ofis sıcaklığı 19.4-22.8°C, ağır iş 12.8-15.6°C). Deniz seviyesinde atmosferik basınç 760 mm cıvadır. Radyasyondan korunmada 3 ilke: Süre (kısa tutulmalı), Mesafe (radyasyon mesafenin karesiyle ters orantılıdır, uzak durulmalı) ve Zırhlama (bariyer). X ışınları iyonize radyasyona örnektir; radon gazı ise doğal radyasyon kaynağıdır."
-            },
-            {
-                title: "Ergonomi, Ofis Hataları ve Egzersizler",
-                content: "Ergonomi 'iş bilimi'dir; amacı kaza ve yorgunluğu önlemek, verimi artırmaktır (eğitimler bel ağrısını %50+ azaltır). Çalışma sandalyesinde yükseklik ayarı ve esnek bel desteği olmalıdır; diz açısı yaklaşık 90 derece olmalıdır. Ofisteki kuru hava bronşite, ekranın statik yükü ise 'konjonktivite' (göz enfeksiyonu) neden olabilir. Ekrandan gelen yansımalar göz gerginliği yapar. 20-20-20 kuralıyla gözler dinlendirilmeli. Boyun için baş sağa/sola çevrilip 8 sn bekletilir. Bilek düz tutulmalı (bükülmemeli) ve 40 dakikadan fazla aralıksız klavye kullanılmamalıdır."
-            },
-            {
-                title: "Manuel Taşıma (Elle Taşıma) Kuralları",
-                content: "Bel ve sırt yaralanmalarını önlemek için yük kaldırırken adım adım gidilmelidir. Yol üzerindeki engeller önceden kaldırılır, ayaklar birbirinden ayrık (arka ayak taşıma yönüne hizalı) tutulur. En önemli kural: Dizler bükülür ancak 'sırt dik tutulur' (çene içeri çekili). Yük vücuda yakın tutulmalıdır ki bel bölgesindeki tork (moment) azalsın. Dönüş yapılacaksa belden bükülerek değil, adımlarla 'tüm vücut' döndürülür. Çalışanın eğitimsiz olması bireysel risk iken; zeminin kaygan ve engebeli olması ortam kaynaklı risktir."
-            },
-            {
-                title: "İş Ekipmanları Güvenliği (PUWER) ve CE",
-                content: "PUWER (1993) kurallarına göre işveren, ekipmanın amaca uygun yapılandırılmasından sorumludur. Kurulum sonrası ve yeni bir yere taşındığında muayene (inspection) zorunludur. Bakım günlüğü varsa güncel tutulmalıdır. Yağlama, temizlik, küçük ayarlamalar bakımdır; ancak 'büyük yeniden tasarım' bakım değildir (risk değerlendirmesi gerektirir). CE işareti üretici (manufacturer) tarafından konur. CE işaretli makinelerde stabilite sağlanmalı, enerji izolasyonu güvenli yapılmalı ve makineyi anında durduracak 'acil durdurma' (emergency stop) butonu bulunmalıdır."
-            },
-            {
-                title: "Elektrik Güvenliği",
-                content: "Elektrik akımı (Amper) ile ölçülür. DC (pil), yönü ve büyüklüğü değişmeyen akımdır. Alçak gerilim sınırı 1000 V faz-fazdır. Akım vücutta kardiyak arreste (kalp ritmi bozulması), kasılmaya ve cilt yanıklarına neden olur. Kaçak akım rölesi (RCCB) akım dengesizliğini algılayıp devreyi hızla keser. Elektrik çarpmasında İLK iş sigortadan enerjiyi kesmektir; kişiye çıplak elle veya normal ayakkabıyla dokunulmaz, yalıtkan aletle müdahale edilir. Bakımda elektrik panosunun önü açık bırakılmalı ve cihazı fişe takmadan önce 'kapalı' olduğundan emin olunmalıdır."
-            }
-        ];
-
-        // -------------------------
-        // 3. 100 BİLGİ KARTI VERİ SETİ
-        // -------------------------
-        const INFO_CARDS_DATA = [
-            { q: "Kimyasal madde nedir?", a: "Doğal ortamda bulunan, üretilen veya atık olarak ortaya çıkan; piyasaya arz edilip edilmediğine bakılmaksızın her türlü element, bileşik veya karışımdır." },
-            { q: "Kimyasallar vücuda kaç yoldan girer? Bunlar nelerdir?", a: "3 yoldan: 1) İnhalasyon (solunum), 2) Absorpsiyon (deri/göz emilimi), 3) Yutma (sindirim)" },
-            { q: "Kimyasal tehlikenin boyutunu belirleyen 4 faktör nedir?", a: "1) Fiziksel-kimyasal özellikler, 2) Maruziyet şekli ve süresi, 3) Maruz kalan kişinin özellikleri, 4) Çevresel özellikler (fiziksel ortam)" },
-            { q: "Kimyasal risk önlemlerinde doğru sıralama nedir?", a: "Önce kaynakta → sonra ortamda → en son kişisel önlem (KKD). Kişisel koruyucular son çaredir." },
-            { q: "Kaynakta alınan kimyasal risk önlemlerine 3 örnek ver.", a: "Maddeyi değiştirme (ikame), süreci kapalı sisteme alma, lokal aspirasyon sistemi uygulama" },
-            { q: "Ortamda alınan kimyasal risk önlemleri nelerdir?", a: "İşyeri düzeni ve tertip, genel aspirasyon, dilüsyon aspirasyonu (taze hava sağlama)" },
-            { q: "Kimyasal maddeler depolanırken hangi maddeler yan yana konulmamalıdır?", a: "Birbiriyle reaksiyona (etkileşime) giren kimyasallar aynı depoda yan yana bulundurulmamalıdır." },
-            { q: "Kimyasal depolama alanında mutlaka bulunması gereken 2 şey nedir?", a: "Göz duşu ve Malzeme Güvenlik Bilgi Formu (MGBF/MSDS)" },
-            { q: "MGBF (MSDS) nedir?", a: "Tehlikeli maddelerin özelliklerini ve insan sağlığı ile çevreyi korumak için alınacak güvenlik önlemlerini içeren yasal belgedir." },
-            { q: "MGBF kaç başlıktan oluşur? İlk 4'ünü say.", a: "16 başlık. İlk 4'ü: a) Madde/imalatçı kimliği, b) Tehlike tanımı, c) Bileşim bilgisi, d) İlk yardım önlemleri" },
-            { q: "Gürültü nasıl tanımlanır?", a: "İstenmeyen ve çoğunlukla yapay olarak üretilen rahatsız edici ses; işitme kaybına yol açabilecek ya da sağlığa zararlı tüm sesleri kapsar." },
-            { q: "Normal insan konuşması kaç dB'dir?", a: "60 dB" },
-            { q: "Haftalık gürültü maruziyet limit değeri kaç dB'dir?", a: "87 dB (haftalık ortalama, 8 saat/gün × 5 gün)" },
-            { q: "Günlük çalışmanın 7,5 saati geçemeyeceği gürültü sınırı nedir?", a: "85 dB ve üzeri gürültü düzeylerinde günlük çalışma 7,5 saati aşamaz." },
-            { q: "Aktif teknik gürültü önlemleri nelerdir?", a: "Makinelerde titreşimi azaltacak uygun malzeme kullanımı, düşük gürültülü süreç seçimi ve programlanması, düzenli bakım" },
-            { q: "Pasif teknik gürültü önlemleri nelerdir?", a: "Gürültü kaynağını ses geçirmez duvarlarla kapatmak, ses geçirmez/yansıtmayan malzeme kullanmak, yüksek gürültülü süreçleri uzak alanlara almak" },
-            { q: "Odyometri nedir ve hangi aletle yapılır?", a: "İşitme testi. Odyometre cihazıyla iki kulak için ayrı ayrı, farklı frekanslarda işitme keskinliği ölçülür." },
-            { q: "Titreşim nasıl tanımlanır?", a: "Bir denge noktası etrafında gerçekleşen mekanik salınımdır." },
-            { q: "Titreşimli aletle çalışırken dirsek neden düz tutulmalıdır?", a: "Dirsek ne kadar bükülürse titreşim elten üst kola o kadar fazla aktarılır; düz tutmak bu geçişi azaltır." },
-            { q: "Titreşim Beyaz Parmak Sendromu nedir?", a: "Raynaud Sendromu'nun ikincil formu; sürekli titreşimli alet kullanımından kaynaklanan endüstriyel hastalık. Parmaklarda beyazlaşma, ağrı ve soğukluk görülür. 'Dead Finger' de denir." },
-            { q: "İyi aydınlatmanın 6 özelliğini say.", a: "1) Yeterli yoğunluk, 2) Sabit yoğunluk, 3) İyi dağılım, 4) Gölge oluşturmamalı, 5) Uygun ışık rengi ve yansıma, 6) Göz kamaştırmamalı" },
-            { q: "Yetersiz aydınlatmanın iş güvenliğine etkisi nedir?", a: "Görme verimliliğini azaltır, kazaları artırır, iş kalitesini ve verimini düşürür, ekonomik kayıplara ve araç/yaya güvenlik risklerine yol açar." },
-            { q: "Yapay aydınlatmanın 3 türü nedir?", a: "1) Doğrudan (Direct) – ışık doğrudan çalışma alanına gelir; 2) Dolaylı (Indirect) – yansıyarak gelir; 3) Yarı-doğrudan/Yerel (Semi-direct/Local) – yalnızca çalışma alanını aydınlatır" },
-            { q: "Termal konfor nedir?", a: "Zihnin ısıl ortamdan duyduğu memnuniyeti ifade eden, öznel değerlendirmeyle belirlenen durumdur." },
-            { q: "Termal konforun 3 temel faktörü nedir?", a: "Sıcaklık, nem (humidity) ve hava hızı (air velocity)" },
-            { q: "Ofis çalışması için önerilen hava sıcaklığı aralığı nedir?", a: "19,4°C – 22,8°C" },
-            { q: "İşyerinde ortam sıcaklığı hangi aletle ölçülür?", a: "Kuru (cıvalı) termometre" },
-            { q: "Termal konfor için önerilen bağıl nem oranı nedir?", a: "%70" },
-            { q: "Deniz seviyesi atmosferik basınç kaç mm cıvadır?", a: "760 mm cıva" },
-            { q: "Atmosferik basıncın çok altında veya üstünde çalışmanın insan sağlığına etkisi nedir?", a: "Kalp, dolaşım veya solunum sıkıntısına yol açabilir." },
-            { q: "İyonize radyasyon örnekleri nelerdir?", a: "Kozmik ışınlar, X ışınları, radyoaktif maddelerden gelen radyasyon" },
-            { q: "İyonize olmayan radyasyon örnekleri nelerdir?", a: "Radyant ısı, radyo dalgaları, mikrodalgalar, kızılötesi ışık, görünür ışık, ultraviyole ışık" },
-            { q: "Radyasyondan korunmanın 3 temel yöntemi nedir?", a: "1) SÜRE – mümkün olduğunca kısa (Doz = Doz Yoğunluğu × Süre), 2) MESAFE – mümkün olduğunca büyük, 3) ZIRHLAMA – kaynak ile kişi arasına bariyer koymak" },
-            { q: "Radyasyon yoğunluğu mesafeyle nasıl değişir?", a: "Mesafenin karesiyle ters orantılı olarak azalır. (Mesafe 2 katına çıkarsa yoğunluk ¼'e düşer.)" },
-            { q: "Doğal radyasyon kaynaklarına 3 örnek ver.", a: "Kozmik ışınlar, vücudumuzdaki radyoaktif elementler, radyumun bozunmasıyla oluşan radon gazı" },
-            { q: "Yapay radyasyon kaynaklarına 3 örnek ver.", a: "Tıbbi tanı-tedavi (X ışını), nükleer güç santralleri, atom bombası denemeleri (1950-1960)" },
-            { q: "Ergonomi kelimesinin Yunanca kökenleri nelerdir?", a: "Ergo = İş, Nomos = Bilim/Yasalar → Ergonomi = 'İş Bilimi'" },
-            { q: "Ergonominin 3 temel amacı nedir?", a: "1) Kaza ve yaralanmaları önlemek, 2) Yorgunluğu ve insan vücudunun aşırı kullanımını en aza indirmek, 3) Verimlilik, kalite ve güvenliği en üst düzeye çıkarmak" },
-            { q: "Ergonomi hangi konularla ilgilenir? 5 örnek ver.", a: "Gürültü, aydınlatma, ısı, titreşim, çalışma alanı tasarımı, el aleti tasarımı, sandalye tasarımı, çalışma saatleri, vardiya, mola süreleri" },
-            { q: "Ofisin ısıtıcılarından kaynaklanan aşırı kuru havanın sonuçları nelerdir?", a: "Akciğer bozuklukları, bronşit, nezle, göz ve cilt hastalıkları, kuru göz, cilt döküntüsü, artmış alerjik duyarlılık" },
-            { q: "Bilgisayar monitöründen yayılan negatif yüklü parçacıklar neden zararlıdır?", a: "Vücutta negatif elektrik yükü oluşturur; havanın pozitif yüklü toz parçacıklarını çekerek gözlerde konjonktivite neden olur." },
-            { q: "Işık kaynağının çalışma alanının tam önünde olmasının sonucu nedir?", a: "Göz kamaşması, göz rahatsızlıkları ve baş ağrısına neden olur." },
-            { q: "Yanlış monitör konumu ve pencere yansımalarının etkisi nedir?", a: "Ciddi zihinsel ve algısal yük ile göz gerginliğine neden olur." },
-            { q: "Bel ağrısına karşı yatma önerisi nedir?", a: "Sırtüstü yatılmamalı, çok yüksek yastık kullanılmamalı; dizlerin altına yeterli yükseklikte yastık konulmalıdır." },
-            { q: "Ergonomi eğitimi bel ağrısı sıklığını ve maliyetini ne kadar azaltır?", a: "%50'nin üzerinde azaltır." },
-            { q: "Manuel taşıma nedir?", a: "Yük kaldırma, indirme, itme, çekme, taşıma veya hareket ettirme gibi bel veya sırt yaralanması riski taşıyabilecek işlerdir." },
-            { q: "Manuel taşımada yükle ilgili risk faktörlerinden 'yükün özellikleri' başlığı altında neler sayılır?", a: "Çok ağır/büyük olması, sert veya kavranması güç olması, dengesiz/kaymacı içerik, vücut bükülmesini gerektiren konum, çarpışmada yaralanma riski" },
-            { q: "Manuel taşımada çalışma ortamının hangi özelliği risk oluşturur?", a: "Dar/alçak alan, engebeli/kaygan zemin, elverişsiz yükseklik, zemin seviyesi farkı, kararsız zemin, uygunsuz sıcaklık/nem/havalandırma" },
-            { q: "Manuel taşımada bireysel risk faktörleri nelerdir?", a: "Uygunsuz fiziksel yapı, uygunsuz kıyafet/ayakkabı, yetersiz eğitim veya bilgi eksikliği" },
-            { q: "Yük kaldırmada 'Adım 3 – Uygun Kaldırma Pozisyonu' nasıldır?", a: "Dizleri bük (çok fazla değil), sırtı dik tut (çeneyi içeri çek), yüke hafifçe öne eğil, omuz ve kalça aynı yönde olsun." },
-            { q: "Yük taşırken yük neden vücuda yakın tutulmalıdır?", a: "Yükü vücuda yakın tutmak bel bölgesindeki kolu momenti (torku) azaltarak bel kasları ve diskler üzerindeki yükü düşürür." },
-            { q: "Yük taşırken dönmek gerektiğinde ne yapılmalıdır?", a: "Adım atarak tüm vücut döndürülmeli; yalnızca bel bölgesi bükülüp döndürülmemelidir." },
-            { q: "CE işareti nedir ve kim koyar?", a: "Ürünün AB standartlarına uygunluğunu gösteren işarettir; üretici tarafından ürüne konulur." },
-            { q: "PUWER'ın açılımı nedir ve ne zaman yürürlüğe girmiştir?", a: "Provision and Use of Work Equipment Regulation. 1993'te yürürlüğe girmiş, 1998'de güncellenmiştir." },
-            { q: "PUWER'a göre bakım (maintenance) yükümlülüğü nedir?", a: "İş ekipmanı verimli durumda, verimli çalışır halde ve iyi onarım içinde tutulmalıdır; varsa bakım günlüğü güncel tutulmalıdır." },
-            { q: "PUWER muayene (inspection) ne zaman yapılmak zorundadır?", a: "a) İlk kullanımdan önce kurulumun ardından, b) Yeni bir alanda veya konumda kurulumun ardından" },
-            { q: "CE işaretli makinede acil durdurma ne anlama gelir?", a: "Makineyi anında güvenli bir duruma getirecek 'emergency stop' kontrolü bulunmalıdır." },
-            { q: "Makine değişikliğinde risk değerlendirmesi sonucu 'HAYIR' çıkarsa ne yapılır?", a: "Ekipman üreticisiyle iletişime geçilir; üretici belgeleme ve değişiklik onayı yapar, gerekirse CE işareti yenilenir." },
-            { q: "Bakım sayılan faaliyetler hangileridir?", a: "Ayarlama, servis, yağlama, temizlik, muayene, revizyon, onarım, küçük değişiklikler, yazılım değişiklikleri" },
-            { q: "Büyük değişiklik veya yeniden tasarım bakım mıdır?", a: "Hayır; büyük değişiklikler ve yeniden tasarım bakım kapsamında sayılmaz, risk değerlendirmesi gerektirir." },
-            { q: "Ekranlı araçlarda monitörün başlıca ergonomik gereksinimleri nelerdir?", a: "Titreşimsiz görüntü, kolay ayarlanabilir parlaklık/kontrast, her yöne döndürülebilir ekran, yansımasız yüzey" },
-            { q: "Klavyenin rengi neden mat olmalıdır?", a: "Işığı yansıtmaması için; parlak yüzey göz yorgunluğuna ve yansımalara neden olur." },
-            { q: "Klavye ve fare aynı yükseklikte olmalı; fare klavyenin neresinde olmalıdır?", a: "Fareyi klavyenin yanına yerleştirmek gerekir; her ikisi de aynı düzlemde olmalıdır." },
-            { q: "Fare kullanırken bilek nasıl tutulmalıdır?", a: "Bilek düz ve düzgün bir hatta tutulmalı; sağa veya sola bükülmemelidir." },
-            { q: "Ekranlı araç çalışmasında kesintisiz klavye kullanımı en fazla kaç dakika olmalıdır?", a: "40 dakika; bu süreden sonra mola verilmelidir." },
-            { q: "20-20-20 benzeri göz dinlendirme kuralı ne diyor?", a: "Her 20 dakikada bir gözler ekrandan uzaklaştırılarak uzak bir noktaya odaklanılmalı; ardından 10-15 saniye gözler kapalı tutularak dinlendirilmelidir." },
-            { q: "Ekranlı araç çalışmasında hangi 6 tür sağlık riski görülür?", a: "1) Kas-iskelet hastalıkları, 2) Göz sorunları, 3) Sinir sistemi bozuklukları, 4) Dolaşım sistemi bozuklukları, 5) Psikolojik bozukluklar, 6) Sindirim sistemi bozuklukları" },
-            { q: "Monitörden gelen ışık yansıması ve titremesi hangi sağlık sorununa yol açar?", a: "Ciddi zihinsel/algısal yük ve göz gerginliğine; miyopi ve astigmat gibi bozuklukların derecesinin artmasına neden olabilir." },
-            { q: "Ofis ortamındaki risk faktörlerinden biri olan 'tekrarlama' nasıl tanımlanır?", a: "Klavye veya bir aleti günlük 4 saatten fazla kesintisiz kullanmak tekrarlama risk faktörü sayılır." },
-            { q: "Çalışma sandalyesinin hangi özelliklere sahip olması gerekir?", a: "Stabil ve hareketli, yüksekliği ayarlanabilir, öne-arkaya/yukarı-aşağıya ayarlanabilir sırt desteği, bel desteği sağlayan esnek yapı, gerektiğinde ayak desteği" },
-            { q: "Elektrik nedir?", a: "Elektrik yüküne sahip maddenin varlığı ve hareketiyle ilişkili fiziksel olgular bütünüdür." },
-            { q: "Elektrik akımının birimi nedir?", a: "Amper (A)" },
-            { q: "Doğru akım (DC) ve Alternatif akım (AC) arasındaki temel fark nedir?", a: "DC'de akımın yönü ve büyüklüğü zamanla değişmez; AC'de ise zamanla değişir. Pil DC'nin, ev elektriği AC'nin klasik örneğidir." },
-            { q: "Alçak gerilim ve yüksek gerilim sınırı nedir?", a: "Alçak gerilim: faz-faz gerilimi 1000 V ve altı. Yüksek gerilim: 1000 V üzeri." },
-            { q: "Elektrik sigortası nasıl çalışır?", a: "Devreden geçen akım belirli değeri aşınca sigortanın metal tel/şeridi erir ve devre açılır (kesilir)." },
-            { q: "Kaçak Akım Şalteri (RCCB) neden kullanılır?", a: "Gidiş ve dönüş iletkenlerindeki akım dengesizliğini (kaçak akımı) algılayarak devreyi anında keser; elektrik çarpmasına karşı koruma sağlar." },
-            { q: "Elektrik akımının insan vücuduna 4 temel etkisi nedir?", a: "1) Kasılma (kas kasılması, solunum durabilir), 2) Kalp (kardiyak arrest, kalp kası hasarı), 3) Sıcaklık (cilt yanıkları), 4) Düşme (yüksekten çalışanlarda)" },
-            { q: "Elektrik çarpan bir kişi neden kendiliğinden çarpan yerden ayrılamaz?", a: "Akım kasların kasılmasına neden olur; bu yüzden kişi tutunduğu yeri bırakamaz." },
-            { q: "Elektrik çarpması durumunda ilk yapılacak 3 şey nedir?", a: "1) Sigortayı keserek elektriği kes, 2) Lastik tabanlı ayakkabı giy ve kuru lastik eldiven tak, 3) Kişiyle temas etmeden önce iletken nesneleri yalıtım çubuğuyla uzaklaştır." },
-            { q: "Elektrik çarpan kişiye çıplak elle dokunmak neden tehlikelidir?", a: "Kurtarıcı da elektriğe kapılır; gerilim kesilmeden temas kurulmamalıdır." },
-            { q: "Elektrik iş kazalarının en sık nedenleri nelerdir? 3'ünü say.", a: "Yetersiz eğitim, yetersiz/bozuk yalıtım, KKD kullanmama, aşırı özgüven, kalitesiz malzeme, yetkisiz arıza müdahalesi" },
-            { q: "'Sigortayı yeniden sarmak' neden yasaktır?", a: "Sigortayı sararak onarmak, aşırı akımı sınırlayan güvenliği ortadan kaldırır ve yangın/çarpma riskini artırır; otomatik sigorta kullanılmalıdır." },
-            { q: "Portatif uzatma kablosu kullanılmadığında yapılmaması gerekenler nelerdir?", a: "Prizde takılı bırakılmamalı, yerde bırakılmamalı, ek kablo eklenmemeli, hasarlı/ezilmiş kablo kullanılmamalı." },
-            { q: "Elektrik panosunun önüne neden hiçbir şey konulmamalıdır?", a: "Acil durumda panoya hızlı erişimi engelleyen her nesne hayati tehlike oluşturabilir." },
-            { q: "Elektrik bakım-onarım öncesinde alınacak ilk önlem nedir?", a: "Ekipman enerji kaynağından bağlantısı kesilmeli; akımı kesen şalterlerin kapalı kaldığı ve kilitli olduğu sağlanmalıdır." },
-            { q: "Elektrikle ilgili çalışmada topraklı fiş neden kullanılmalıdır?", a: "Topraklama, kaçak akımı güvenle toprağa iletir ve kişinin çarpılmasını önler." },
-            { q: "El aletlerinin yalıtımlı olması ne anlama gelir?", a: "Kerpeten, tornavida gibi aletlerin sapları elektriği iletmeyen (yalıtkan) malzemeyle kaplanmış olması; akımın kullanıcıya geçmesini engeller." },
-            { q: "Güç aletleri hangi durumlarda kullanılmamalıdır?", a: "Hasarlı topraklama, aşırı kıvılcım, hasarlı priz/fiş/şalter veya bağlantı kablosu varsa kullanılmamalıdır." },
-            { q: "Elektrik çarpmasında 112'yi aramak dışında yapılacak ilk müdahale adımlarını sırala.", a: "1) Elektriği kes (sigorta), 2) Kişiye yaklaşmadan önce yalıtım sağla (ayakkabı, eldiven), 3) Kişiyi kıyafetinden tutarak çek, 4) İlk yardım uygula, 5) 112'yi ara" },
-            { q: "İşyeri aydınlatma mevzuatına göre temel ilke nedir?", a: "İşyerleri yeterli doğal ışıkla aydınlatılmalıdır; yetersiz kalınca veya gece vardiyasında yapay aydınlatma sağlanmalıdır." },
-            { q: "Kimyasal madde kaplarında neden etiket zorunludur?", a: "Maddenin kimliğini, tehlikelerini ve güvenlik bilgilerini bildirmek için; etiketsiz kap kullanımı ciddi güvenlik riski ve yasal ihlal oluşturur." },
-            { q: "Hafif fiziksel çalışma için önerilen ortam sıcaklığı nedir?", a: "18,3°C" },
-            { q: "Ağır endüstriyel çalışma için önerilen ortam sıcaklığı aralığı nedir?", a: "12,8°C – 15,6°C" },
-            { q: "Titreşimli alet kullanırken aleti ne kadar sıkı tutmak uygundur?", a: "Mümkün olduğunca gevşek tutulmalıdır; sıkı kavramak el-kol titreşim maruziyetini artırır." },
-            { q: "Kimyasal maddenin 'ikame' yoluyla değiştirilmesi ne anlama gelir?", a: "Tehlikeli bir kimyasalın daha az tehlikeli veya tehlikesiz bir maddeyle değiştirilmesidir; kaynakta alınan en etkin önlemdir." },
-            { q: "MGBF'de 'toksikolojik bilgi' başlığı ne içerir?", a: "Maddenin organizmaları nasıl etkilediğine dair bilgileri (zehirlilik, etki yolları, akut/kronik etkiler vb.)" },
-            { q: "Kaçak Akım Şalteri aylık olarak ne için kontrol edilmelidir?", a: "Cihazın çalışır durumda olduğunu doğrulamak için; işlev görmeyen bir şalter elektrik çarpmalarına karşı koruma sağlamaz." },
-            { q: "Radyasyon korumasının amacı nedir?", a: "İnsanlar için uygun koruma düzeyini sağlamak ve zararlı etkilerin (özellikle kanser, genetik bozukluk) oluşmasını önlemektir." },
-            { q: "Ergonomi eğitiminin bel ağrısı üzerindeki kanıtlanmış etkisi nedir?", a: "Ergonomi eğitimi ve iyileştirmelerinin bel ağrısı sıklığını ve maliyetini %50'nin üzerinde azalttığı bilimsel olarak gösterilmiştir." },
-            { q: "İş sağlığı ve güvenliği çerçevesinde KKD'nin yeri nedir?", a: "KKD (Kişisel Koruyucu Donanım) en son başvurulacak önlemdir. Önce kaynakta, sonra ortamda önlemler alınmalı; yeterli olmadığında KKD devreye girmelidir. Ancak gerektiğinde kullanımı zorunludur." }
-        ];
-
-        // -------------------------
-        // 4. FULL ENGLISH QUIZ QUESTIONS (104 Questions)
-        // -------------------------
-        const INITIAL_QUIZ_QUESTIONS = [
-            { question: "Which of the following is not a route of entry for chemicals into the body?", options: ["Inhalation", "Skin absorption", "Ingestion", "Hearing"], answer: "Hearing" },
-            { question: "What is the maximum weekly noise exposure limit value in decibels (dB)?", options: ["80", "85", "87", "90"], answer: "87" },
-            { question: "What is the occupational disease caused by hand-arm vibration?", options: ["Bronchitis", "Myopia", "Vibration White Finger (Dead Finger)", "Cardiac Arrest"], answer: "Vibration White Finger (Dead Finger)" },
-            { question: "What is the most important rule when lifting a load?", options: ["Bending from the waist", "Keeping the load far from the body", "Keeping the back straight and bending the knees", "Lifting quickly"], answer: "Keeping the back straight and bending the knees" },
-            { question: "Which is false about the definition of a chemical substance?", options: ["Elements found in nature are considered chemical substances.", "Only substances placed on the market are considered chemical substances.", "Wastes generated during production are chemical substances.", "Compounds and mixtures fall within the definition."], answer: "Only substances placed on the market are considered chemical substances." },
-            { question: "Which is not a route of entry for chemicals?", options: ["Inhalation", "Skin and eye absorption", "Ingestion", "Direct injection via the circulatory system"], answer: "Direct injection via the circulatory system" },
-            { question: "What is the correct order of chemical risk measures?", options: ["Personal -> Environment -> Source", "Source -> Personal -> Environment", "Source -> Environment -> Personal", "Environment -> Source -> Personal"], answer: "Source -> Environment -> Personal" },
-            { question: "Which is a chemical risk measure taken at the source?", options: ["Installing general ventilation", "Wearing gloves and masks", "Replacing a hazardous chemical with a less hazardous one (substitution)", "Providing fresh air circulation"], answer: "Replacing a hazardous chemical with a less hazardous one (substitution)" },
-            { question: "Which rule is false for chemical storage?", options: ["Containers must be labeled.", "Interacting chemicals can be stored side by side.", "An eye shower must be available.", "Absorbent material must be kept ready for spills."], answer: "Interacting chemicals can be stored side by side." },
-            { question: "How many headings does an MSDS have?", options: ["8", "12", "14", "16"], answer: "16" },
-            { question: "Which information is not included in an MSDS?", options: ["Toxicological information", "Transport information", "Sales price of the product", "Ecological information"], answer: "Sales price of the product" },
-            { question: "What is the weekly exposure limit for noise?", options: ["75 dB", "80 dB", "87 dB", "95 dB"], answer: "87 dB" },
-            { question: "What is the approximate dB of a normal office environment and refrigerator noise?", options: ["30 dB", "50 dB", "70 dB", "90 dB"], answer: "50 dB" },
-            { question: "What is the maximum daily working time in environments with 85 dB and above?", options: ["6 hours", "7 hours", "7.5 hours", "8 hours"], answer: "7.5 hours" },
-            { question: "Which is an active technical noise measure?", options: ["Enclosing the noise source with a soundproof wall", "Asking employees to use earplugs", "Choosing materials that reduce vibration in machine production", "Moving the high noise department to remote areas"], answer: "Choosing materials that reduce vibration in machine production" },
-            { question: "What does audiometry measure?", options: ["Lung capacity", "Visual acuity", "Hearing acuity at different frequencies", "Blood pressure"], answer: "Hearing acuity at different frequencies" },
-            { question: "What is another name for Vibration White Finger Syndrome?", options: ["Carpal tunnel syndrome", "Secondary form of Raynaud's Syndrome (Dead Finger)", "Tendinitis", "Bursitis"], answer: "Secondary form of Raynaud's Syndrome (Dead Finger)" },
-            { question: "Why should the elbow be kept straight when working with a vibrating tool?", options: ["Blood circulation gets better.", "If the elbow is bent, vibration is transmitted more to the upper arm.", "A straight elbow allows holding the tool tighter.", "It is a legal obligation."], answer: "If the elbow is bent, vibration is transmitted more to the upper arm." },
-            { question: "Which feature should good lighting NOT have?", options: ["Constant and unchanging intensity", "No shadow formation", "Emitting dazzling bright light", "Adequate light intensity"], answer: "Emitting dazzling bright light" },
-            { question: "Which is not a consequence of insufficient lighting?", options: ["Deterioration of work quality", "Eye strain", "Increase in efficiency", "Economic losses"], answer: "Increase in efficiency" },
-            { question: "Which type of lighting illuminates only the working area directly?", options: ["Direct", "Indirect", "Semi-direct / Local", "Diffuse"], answer: "Semi-direct / Local" },
-            { question: "What is the recommended relative humidity for thermal comfort?", options: ["40%", "55%", "70%", "85%"], answer: "70%" },
-            { question: "What is the suitable air temperature range for office work?", options: ["12.8°C – 15.6°C", "16°C – 18°C", "19.4°C – 22.8°C", "24°C – 27°C"], answer: "19.4°C – 22.8°C" },
-            { question: "Which instrument measures ambient temperature in the workplace?", options: ["Hygrometer", "Barometer", "Dry (mercury) thermometer", "Anemometer"], answer: "Dry (mercury) thermometer" },
-            { question: "What is the atmospheric pressure at sea level?", options: ["560 mm Hg", "660 mm Hg", "760 mm Hg", "860 mm Hg"], answer: "760 mm Hg" },
-            { question: "Which is an example of ionizing radiation?", options: ["Infrared light", "Visible light", "X-rays", "Microwaves"], answer: "X-rays" },
-            { question: "How does the 'distance' principle work in radiation protection?", options: ["Radiation intensity decreases directly proportional to the distance.", "Radiation intensity decreases inversely proportional to the square of the distance.", "Distance has no effect.", "Distance is only important for gamma rays."], answer: "Radiation intensity decreases inversely proportional to the square of the distance." },
-            { question: "What is the correct order of the 3 basic methods of radiation protection?", options: ["Shielding - Distance - Time", "Time - Distance - Shielding", "Distance - Shielding - Time", "Time - Shielding - Distance"], answer: "Time - Distance - Shielding" },
-            { question: "Which is a natural radiation source?", options: ["Nuclear power plants", "X-ray devices", "Radon gas", "Atomic bomb tests"], answer: "Radon gas" },
-            { question: "What do the Greek components of the word ergonomics mean?", options: ["Ergo = Human, Nomos = Law", "Ergo = Work, Nomos = Science/Law", "Ergo = Energy, Nomos = Environment", "Ergo = Force, Nomos = Measurement"], answer: "Ergo = Work, Nomos = Science/Law" },
-            { question: "Which is not a main goal of ergonomics?", options: ["Preventing accidents and injuries", "Reducing the number of workers", "Increasing efficiency and quality", "Minimizing fatigue and discomfort"], answer: "Reducing the number of workers" },
-            { question: "Which is not a result of extremely dry air from office heaters?", options: ["Bronchitis", "Dry eyes", "Increased allergic sensitivity", "Hearing loss"], answer: "Hearing loss" },
-            { question: "What health problem is caused by negatively charged particles emitted by computer monitors?", options: ["Low back pain", "Conjunctivitis in the eyes", "Hearing loss", "Respiratory infections"], answer: "Conjunctivitis in the eyes" },
-            { question: "By at least what percentage does ergonomics training reduce the frequency and cost of low back pain?", options: ["20%", "35%", "50%", "75%"], answer: "50%" },
-            { question: "Why should you keep the load close to your body in manual handling?", options: ["To gain speed", "To reduce the load (moment) on the lower back", "To see the load better", "To maintain balance"], answer: "To reduce the load (moment) on the lower back" },
-            { question: "What is the correct statement about 'keeping the back straight' in manual lifting?", options: ["The back should be kept completely flat and tense.", "The natural curve of the back should be maintained by pulling the chin in.", "The back is not important during lifting.", "The back should lean forward and weight taken on shoulders."], answer: "The natural curve of the back should be maintained by pulling the chin in." },
-            { question: "What should be done when a turn is necessary in manual handling?", options: ["Only the lower back region is turned.", "The head and shoulders are turned, legs remain stationary.", "The whole body is turned together (by stepping).", "The load is dropped before turning."], answer: "The whole body is turned together (by stepping)." },
-            { question: "Which is an individual risk factor in manual handling?", options: ["Slippery floor", "The worker lacking sufficient training about the job and risks", "Narrow and low working area", "High ambient temperature"], answer: "The worker lacking sufficient training about the job and risks" },
-            { question: "Who places the CE mark on the product?", options: ["The employer", "The state inspection agency", "The manufacturer", "The end user"], answer: "The manufacturer" },
-            { question: "When did PUWER first come into force?", options: ["January 1, 1990", "January 1, 1993", "January 1, 1998", "January 1, 2003"], answer: "January 1, 1993" },
-            { question: "What is the correct statement about the maintenance log according to PUWER?", options: ["It is not mandatory to keep a maintenance log.", "If a maintenance log exists, it must be kept up to date.", "It is only necessary for heavy industry.", "It is kept for 5 years to show inspectors."], answer: "If a maintenance log exists, it must be kept up to date." },
-            { question: "How long should inspection results be kept under PUWER?", options: ["6 months", "1 year", "Until the next inspection", "Indefinitely"], answer: "Until the next inspection" },
-            { question: "What is the purpose of the 'emergency stop' control on a CE-marked machine?", options: ["To speed up the machine.", "It is designed to stop the machine safely in an emergency.", "To save energy.", "To activate maintenance mode."], answer: "It is designed to stop the machine safely in an emergency." },
-            { question: "Which of the following is not considered maintenance?", options: ["Lubrication", "Cleaning", "Completely re-designing the machine", "Minor adjustments"], answer: "Completely re-designing the machine" },
-            { question: "Which is a false ergonomic feature for a display screen device monitor?", options: ["The screen image should be flicker-free.", "Brightness and contrast should be easily adjustable.", "The screen must be fixed to the wall in a stationary position.", "Disturbing reflections should be prevented."], answer: "The screen must be fixed to the wall in a stationary position." },
-            { question: "What is correct for the wrist when using a keyboard and mouse?", options: ["The wrist should be bent slightly upwards.", "The wrist should not be bent to the right or left; it should be kept straight.", "The wrist angle doesn't matter.", "Using a wrist rest decreases performance."], answer: "The wrist should not be bent to the right or left; it should be kept straight." },
-            { question: "What is the recommended break frequency to protect eye health when working with display screens?", options: ["Every 10 minutes", "Every 20 minutes", "Every 45 minutes", "Every 60 minutes"], answer: "Every 20 minutes" },
-            { question: "Which examination must be performed before starting work with display screen devices?", options: ["Audiometry", "Chest X-ray", "Eye examination (by a specialist doctor)", "Blood test"], answer: "Eye examination (by a specialist doctor)" },
-            { question: "What defines the 'repetition' risk factor in an office environment?", options: ["Different employees doing the same task", "Using a keyboard or tool continuously for more than 4 hours a day", "Taking breaks at the same time every day", "Periodic reporting monthly"], answer: "Using a keyboard or tool continuously for more than 4 hours a day" },
-            { question: "What is the unit of electric current?", options: ["Volt", "Ohm", "Watt", "Ampere"], answer: "Ampere" },
-            { question: "What is true about direct current (DC)?", options: ["House electricity is an example of DC.", "In DC, the direction of the current changes over time.", "A battery is a perfect DC source.", "DC is used in large high-power motors."], answer: "A battery is a perfect DC source." },
-            { question: "What is the low voltage limit?", options: ["50 V phase-to-phase", "220 V phase-to-phase", "500 V phase-to-phase", "1000 V phase-to-phase"], answer: "1000 V phase-to-phase" },
-            { question: "In what situation does a Residual Current Circuit Breaker (RCCB) trip the circuit?", options: ["When the voltage rises too high", "When there is an imbalance between the current in the supply and return conductors", "When the circuit temperature exceeds a certain value", "When the fuse melts"], answer: "When there is an imbalance between the current in the supply and return conductors" },
-            { question: "Which is not among the effects of electric current on the human body?", options: ["Muscle contraction", "Cardiac arrest", "Skin burns", "Bone fracture"], answer: "Bone fracture" },
-            { question: "What is the first thing to do in case of an electric shock?", options: ["Touch the person directly", "Call 112", "Cut the electricity using the fuse", "Wrap the person with a wet cloth"], answer: "Cut the electricity using the fuse" },
-            { question: "Under what condition can a person suffering an electric shock be touched?", options: ["Barehanded, if moving quickly", "With thick rubber-soled shoes and after the fuses are turned off", "When using a wet cloth", "If the person is unconscious"], answer: "With thick rubber-soled shoes and after the fuses are turned off" },
-            { question: "What should not be done when a portable extension cord is not in use?", options: ["Unplug it", "Store it in a dry place", "Leave it plugged into the socket", "Coil it according to the manual"], answer: "Leave it plugged into the socket" },
-            { question: "Why must the handles of screwdrivers used in electrical work be insulated?", options: ["To hold it more firmly", "To prevent the current from passing to the user", "To reduce tool weight", "It is a visual standard, not functional"], answer: "To prevent the current from passing to the user" },
-            { question: "Which electrical safety rule is false?", options: ["Power tools must be checked by authorized persons before use.", "A damaged fuse can be repaired by wrapping it.", "The RCCB should be checked monthly.", "Multiple devices should not be connected to a single socket."], answer: "A damaged fuse can be repaired by wrapping it." },
-            { question: "What does 'insufficient insulation', a source of electrical accidents, mean?", options: ["Insulation degradation where current can pass through unintended paths", "Insufficient fuse capacity", "Weak grounding line", "Thin cable thickness"], answer: "Insulation degradation where current can pass through unintended paths" },
-            { question: "Why should no objects be placed in front of an electrical panel during maintenance and repair?", options: ["Visual access to the panel is mandatory.", "To provide quick physical access to the panel in an emergency", "To leave space for a fire extinguisher", "Because it is a legal rule."], answer: "To provide quick physical access to the panel in an emergency" },
-            { question: "What does the 'ecological information' heading in an MSDS cover?", options: ["Environmental landscaping in the workplace", "The effects of the substance on the natural environment (water, soil, air pollution, etc.)", "The physical properties of the working environment", "The geographical region where the substance is produced"], answer: "The effects of the substance on the natural environment (water, soil, air pollution, etc.)" },
-            { question: "Which is an individual factor determining chemical hazard?", options: ["Flash point of the substance", "Ambient ventilation system", "The health status and genetic makeup of the exposed person", "Equipment used in the production process"], answer: "The health status and genetic makeup of the exposed person" },
-            { question: "Which measure category does the local exhaust ventilation system fall into?", options: ["Personal measures", "Environmental measures", "Measures taken at the source", "Medical measures"], answer: "Measures taken at the source" },
-            { question: "What is the consequence of gripping a vibrating tool tightly?", options: ["Vibration is transmitted less.", "Hand-arm vibration exposure increases.", "Elbow bending decreases.", "Blood circulation improves."], answer: "Hand-arm vibration exposure increases." },
-            { question: "What is the primary medical measure against noise?", options: ["Vitamin supplements", "Audiometry (hearing test)", "Blood pressure measurement", "Chest X-ray"], answer: "Audiometry (hearing test)" },
-            { question: "How many dB of noise does a rock concert produce?", options: ["90 dB", "100 dB", "110 dB", "120 dB"], answer: "110 dB" },
-            { question: "What is the approximate noise level of an airplane taking off?", options: ["100 dB", "110 dB", "120 dB", "130 dB"], answer: "120 dB" },
-            { question: "Which is correct during the 'planning the lift' step in manual handling?", options: ["It should be lifted alone even if help is needed.", "Obstacles on the walking path should be removed beforehand.", "The load must always be kept close to the ground.", "Lifting equipment is only used in heavy industry."], answer: "Obstacles on the walking path should be removed beforehand." },
-            { question: "What should be the approximate knee angle in an ideal sitting position?", options: ["45°", "60°", "90°", "120°"], answer: "90°" },
-            { question: "What is the recommended ambient temperature range for heavy industrial work?", options: ["18°C – 22°C", "15°C – 19°C", "12.8°C – 15.6°C", "10°C – 12°C"], answer: "12.8°C – 15.6°C" },
-            { question: "What is the recommended ambient temperature for light physical work?", options: ["12.8°C", "18.3°C", "20°C", "22.8°C"], answer: "18.3°C" },
-            { question: "What is the basic formula for the 'time' principle in radiation protection?", options: ["Dose = Distance / Time", "Dose = Dose Rate × Time", "Dose = Dose Rate / Distance²", "Dose = Time × Distance"], answer: "Dose = Dose Rate × Time" },
-            { question: "Which is an artificial radiation source?", options: ["Cosmic rays", "Radioactive elements in our body", "Nuclear power plants", "Radon gas"], answer: "Nuclear power plants" },
-            { question: "What does the 'stability' requirement mean for a CE-marked machine?", options: ["The machine software being stable", "Being secured with a clamp or similar when necessary", "The machine noise staying at a constant level", "Stable electrical voltage"], answer: "Being secured with a clamp or similar when necessary" },
-            { question: "Under what condition does the 'inspection' requirement in PUWER become mandatory?", options: ["Only when requested by the manufacturer", "When equipment safety depends on installation conditions or is exposed to conditions causing deterioration", "When a state inspector visits", "When an employee complains"], answer: "When equipment safety depends on installation conditions or is exposed to conditions causing deterioration" },
-            { question: "Which is a mandatory feature for a work chair in display screen work?", options: ["Built-in footrest", "Armrests", "Height adjustment", "Heating system"], answer: "Height adjustment" },
-            { question: "Which situation is not harmful to health in display screen work?", options: ["Back and neck pain", "Increase in the degree of eye disorders", "Adjusting brightness and contrast on the monitor", "Wrist numbness"], answer: "Adjusting brightness and contrast on the monitor" },
-            { question: "Which is a correct measure against the inhalation of a chemical substance?", options: ["Wearing gloves", "Wearing goggles", "Installing a local exhaust ventilation system", "Hanging a warning sign"], answer: "Installing a local exhaust ventilation system" },
-            { question: "Which of the following substances cannot be stored together?", options: ["Water and salt", "Oxidizing substance and radioactive substance", "Organic solvent and detergent", "Plastic and paper"], answer: "Oxidizing substance and radioactive substance" },
-            { question: "Which material should be preferred in the workplace as a passive technical noise measure?", options: ["Metal panels", "Soundproof and non-sound-reflecting materials", "Glass partitions", "Wooden flooring"], answer: "Soundproof and non-sound-reflecting materials" },
-            { question: "Which risk falls into the 'characteristics of the working environment' category in manual handling?", options: ["Advanced age of the employee", "The load being heavy", "Uneven and slippery floor", "Insufficient training"], answer: "Uneven and slippery floor" },
-            { question: "What is the employer's basic obligation regarding work equipment according to PUWER?", options: ["Procuring the cheapest equipment", "Ensuring the equipment is configured properly for its intended use", "Renewing the equipment every 5 years", "Insuring the equipment"], answer: "Ensuring the equipment is configured properly for its intended use" },
-            { question: "Which is not an 'office mistake' in ergonomic workspace design?", options: ["Light source being directly opposite the screen", "Positioning the screen at eye level", "Chair that strains the neck and back", "Sitting in front of the computer for a long time without breaks"], answer: "Positioning the screen at eye level" },
-            { question: "Which is true for 'barrels and drums' in chemical storage?", options: ["Can be stored open, exposed to rain.", "They must be stored in a way that does not create environmental pollution.", "Stacked on top of each other regardless of content.", "Labeling is not mandatory."], answer: "They must be stored in a way that does not create environmental pollution." },
-            { question: "Which electrical rule is correct?", options: ["Turn on the device before plugging it in.", "Cables should be routed below head level.", "Using a grounded plug is optional.", "Fuses must be turned off before starting electrical work."], answer: "Fuses must be turned off before starting electrical work." },
-            { question: "How is the 'shielding' method applied in radiation protection?", options: ["Working time is shortened.", "Stay away from the source.", "An appropriate barrier is placed between the source and the person.", "Radiation-resistant medicine is used."], answer: "An appropriate barrier is placed between the source and the person." },
-            { question: "Which is a symptom of a nervous system disorder in display screen work?", options: ["Low back pain", "Skin rash", "Headache and general fatigue", "Hearing loss"], answer: "Headache and general fatigue" },
-            { question: "What is the most important consequence of incorrect monitor positioning and window reflections?", options: ["Strengthening neck muscles", "Severe mental/perceptual load and eye strain", "Energy saving", "Difficulty using the keyboard"], answer: "Severe mental/perceptual load and eye strain" },
-            { question: "Which is a wrong practice to prevent low back pain?", options: ["Bending the knees when lifting a load from the ground", "Keeping the weight close to the body", "Keeping feet at the same level when standing for long periods", "Using a footstool when necessary"], answer: "Keeping feet at the same level when standing for long periods" },
-            { question: "What does the 'stability and reactivity' heading in an MSDS describe?", options: ["Market shelf stability", "The chemical stability of the substance and how it reacts under conditions", "Price stability", "Worker attitude"], answer: "The chemical stability of the substance and how it reacts under conditions" },
-            { question: "What does the 'isolation and reconnection' requirement mean in a CE-marked machine?", options: ["Providing sound insulation", "Safe isolation from energy sources and reconnection without putting the person at risk", "Isolating the machine from the electrical grid for three months", "Locking the machine in a closed room"], answer: "Safe isolation from energy sources and reconnection without putting the person at risk" },
-            { question: "Which regulation is taken as a basis for legal measures against noise?", options: ["Regulation on Health and Safety Precautions in Working with Chemicals", "Regulation on the Protection of Employees from Risks Related to Noise", "Regulation on Health Precautions in Workplace Buildings", "Personal Protective Equipment Regulation"], answer: "Regulation on the Protection of Employees from Risks Related to Noise" },
-            { question: "Which of the following office exercises is performed for the neck?", options: ["Lifting legs and rotating ankles", "Raising shoulders to ears and rotating back and forth", "Slowly turning the head left and right and waiting for 8 seconds", "Clasping hands behind and pulling shoulders back"], answer: "Slowly turning the head left and right and waiting for 8 seconds" },
-            { question: "What is the main difference between ionizing and non-ionizing radiation?", options: ["Non-ionizing radiation travels faster.", "Ionizing radiation has enough energy to strip electrons from atoms, while non-ionizing radiation does not.", "There is no practical difference.", "Non-ionizing radiation only comes from the sun."], answer: "Ionizing radiation has enough energy to strip electrons from atoms, while non-ionizing radiation does not." },
-            { question: "Which is a risk factor originating from 'job requirements' in manual handling?", options: ["Floor irregularity", "Insufficient training", "Excessive lifting/lowering distances", "Difficulty grasping the load"], answer: "Excessive lifting/lowering distances" },
-            { question: "What is the difference between 'heat' and 'temperature' in terms of thermal comfort?", options: ["They mean the same thing.", "Heat measures energy transfer, temperature measures average molecular motion.", "Temperature measures energy transfer, heat measures moisture.", "They are the same magnitude measured differently."], answer: "Heat measures energy transfer, temperature measures average molecular motion." },
-            { question: "How does electric current damage the heart?", options: ["Stops it by cooling.", "Disrupts the heartbeat rhythm and damages the heart muscles.", "Clogs the heart vessels.", "Only causes loss of consciousness."], answer: "Disrupts the heartbeat rhythm and damages the heart muscles." },
-            { question: "Which is the correct definition of PPE use?", options: ["PPE is always the first choice.", "PPE is designed only for chemical risks.", "PPE is used as a last resort when measures at the source and environment are insufficient, but it is mandatory when necessary.", "PPE use is optional."], answer: "PPE is used as a last resort when measures at the source and environment are insufficient, but it is mandatory when necessary." },
-            { question: "Who is not among the persons held responsible by PUWER?", options: ["Owner of the equipment", "Operator of the equipment", "Person with control over the equipment", "Customer planning to buy the equipment"], answer: "Customer planning to buy the equipment" },
-            { question: "What is the recommended stance for 'distance between feet' in load lifting?", options: ["Feet are kept together.", "Front foot is relaxed, back foot is at a distance and aligned with the carrying direction.", "Feet are wider than shoulder-width.", "Both feet are right under the load."], answer: "Front foot is relaxed, back foot is at a distance and aligned with the carrying direction." },
-            { question: "How are 'circulatory system disorders' explained in display screen work?", options: ["Inactive, prolonged sitting causes blood to pool in the feet and leads to circulatory problems.", "Screen light drops blood pressure.", "Keyboard vibration affects veins.", "Dry air increases blood viscosity."], answer: "Inactive, prolonged sitting causes blood to pool in the feet and leads to circulatory problems." },
-            { question: "What does 'transport information' mean in an MSDS?", options: ["How to return the substance to the supplier", "Rules regarding the transport of the substance by road, rail, air, or sea", "In-house transport procedures", "Shipping terms of the selling company"], answer: "Rules regarding the transport of the substance by road, rail, air, or sea" },
-            { question: "Which statement best summarizes the integrated measure hierarchy in occupational health and safety?", options: ["Starting with PPE and changing the source if necessary.", "First taking measures at the source, then in the environment; using PPE if not enough.", "Only taking technical measures.", "Following legal regulations is enough."], answer: "First taking measures at the source, then in the environment; using PPE if not enough." }
-        ];
-
-        // -------------------------
-        // SÖZLÜK KELİME KARTI BİLEŞENİ
-        // -------------------------
-        const FlashCard = ({ item, isFlipped, onClick, isLarge = false, onDelete }) => {
-          const height = isLarge ? "h-64 md:h-80" : "h-52 md:h-60";
-          return (
-            <div className={`perspective-1000 w-full ${height} cursor-pointer relative group`} onClick={onClick}>
-              
-              {/* SİLME BUTONU */}
-              {onDelete && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                  className="absolute top-3 right-3 z-10 bg-red-100 text-red-500 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white shadow-sm"
-                  title="Kelimeyi Sil"
-                >
-                  <i className="fa-solid fa-trash"></i>
-                </button>
-              )}
-
-              <div className={`relative w-full h-full transition-all duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-                <div className="absolute inset-0 bg-white border-2 border-slate-100 rounded-2xl shadow-sm flex flex-col items-center justify-center p-6 backface-hidden">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase mb-4 tracking-widest">English</span>
-                  <h3 className={`${isLarge ? 'text-3xl' : 'text-xl'} font-bold text-slate-800 text-center`}>{item.en}</h3>
-                  <i className="fa-solid fa-rotate text-slate-200 mt-6"></i>
-                </div>
-                <div className="absolute inset-0 bg-blue-600 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 rotate-y-180 backface-hidden text-white">
-                  <span className="text-blue-200 text-[10px] font-bold uppercase mb-4 tracking-widest">Türkçe</span>
-                  <h3 className={`${isLarge ? 'text-3xl' : 'text-xl'} font-bold text-center`}>{item.tr}</h3>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        // -------------------------
-        // ANA UYGULAMA (APP)
-        // -------------------------
-        const App = () => {
-          const [view, setView] = useState('cards'); 
-          const [activeCat, setActiveCat] = useState("A – KİMYASALLAR");
-          const [search, setSearch] = useState("");
-          const [flippedStates, setFlippedStates] = useState({});
-
-          // ==========================================
-          // LOCAL STORAGE BAĞLANTILARI (KALICI HAFIZA)
-          // ==========================================
-          
-          // 1. KELİME LİSTESİ
-          const [vocabData, setVocabData] = useState(() => {
-            const savedData = localStorage.getItem('isg_vocab_data');
-            return savedData ? JSON.parse(savedData) : INITIAL_VOCAB_DATA;
-          });
-
-          useEffect(() => {
-            localStorage.setItem('isg_vocab_data', JSON.stringify(vocabData));
-          }, [vocabData]);
-
-          // 2. TEST SORULARI
-          const [customQuestions, setCustomQuestions] = useState(() => {
-            const savedQs = localStorage.getItem('isg_custom_questions_en');
-            return savedQs ? JSON.parse(savedQs) : INITIAL_QUIZ_QUESTIONS;
-          });
-
-          useEffect(() => {
-            localStorage.setItem('isg_custom_questions_en', JSON.stringify(customQuestions));
-          }, [customQuestions]);
-
-          // ---- YENİ KELİME EKLEME STATE'LERİ ----
-          const [newWordEn, setNewWordEn] = useState("");
-          const [newWordTr, setNewWordTr] = useState("");
-
-          // ---- ÖĞRENME MODU (Kart Destesi) State'leri ----
-          const [flashcardDeck, setFlashcardDeck] = useState([]);
-          const [isFlashcardFlipped, setIsFlashcardFlipped] = useState(false);
-
-          // ---- 100 BİLGİ KARTI MODU State'leri ----
-          const [activeInfoDeck, setActiveInfoDeck] = useState(false);
-          const [infoIndex, setInfoIndex] = useState(0);
-          const [isInfoFlipped, setIsInfoFlipped] = useState(false);
-
-          // ---- TEST MODU State'leri ----
-          const [currentQIndex, setCurrentQIndex] = useState(0);
-          const [score, setScore] = useState(0);
-          const [showTestResult, setShowTestResult] = useState(false);
-          const [selectedOption, setSelectedOption] = useState(null);
-          const [wrongAnswers, setWrongAnswers] = useState([]); // Yeni: Yanlış soruları tutar
-          
-          // Soru Ekleme Formu State'leri
-          const [newQText, setNewQText] = useState("");
-          const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
-          const [newQAnswerIndex, setNewQAnswerIndex] = useState(0);
-
-          // Dinamik Filtreleme
-          const filteredList = useMemo(() => {
-            if (search) {
-              return Object.values(vocabData).flat().filter(w => 
-                w.en.toLowerCase().includes(search.toLowerCase()) || 
-                w.tr.toLowerCase().includes(search.toLowerCase())
-              );
-            }
-            return vocabData[activeCat] || [];
-          }, [search, activeCat, vocabData]);
-
-          // --- KELİME EKLEME VE SİLME FONKSİYONLARI ---
-          const handleAddWord = (e) => {
-              e.preventDefault();
-              if (!newWordEn.trim() || !newWordTr.trim()) return;
-
-              setVocabData(prev => {
-                  const newData = { ...prev };
-                  newData[activeCat] = [{ en: newWordEn, tr: newWordTr }, ...newData[activeCat]];
-                  return newData;
-              });
-
-              setNewWordEn("");
-              setNewWordTr("");
-              alert(`"${newWordEn}" kelimesi ${activeCat} kategorisine eklendi ve kaydedildi!`);
-          };
-
-          const handleDeleteWord = (wordEn, wordTr) => {
-              if(!window.confirm(`"${wordEn}" kelimesini silmek istediğinize emin misiniz?`)) return;
-
-              setVocabData(prev => {
-                  const newData = { ...prev };
-                  for (let cat in newData) {
-                      newData[cat] = newData[cat].filter(w => w.en !== wordEn || w.tr !== wordTr);
-                  }
-                  return newData;
-              });
-          };
-
-          // --- SÖZLÜK ÖĞRENME MODU FONKSİYONLARI ---
-          const startFlashcardQuiz = () => {
-            const all = Object.values(vocabData).flat().sort(() => Math.random() - 0.5);
-            setFlashcardDeck(all);
-            setView('quiz');
-            setIsFlashcardFlipped(false);
-          };
-
-          const handleFlashcardNext = (known) => {
-            setIsFlashcardFlipped(false);
-            setTimeout(() => {
-              setFlashcardDeck(prev => {
-                const rest = prev.slice(1);
-                return known ? rest : [...rest, prev[0]];
-              });
-            }, 200);
-          };
-
-          // --- TEST FONKSİYONLARI ---
-          const handleAnswerClick = (option) => {
-            if (selectedOption) return;
-            setSelectedOption(option);
-            
-            const isCorrect = option === customQuestions[currentQIndex].answer;
-            
-            if (isCorrect) {
-              setScore(score + 1);
-            } else {
-              // Yanlış soruyu listeye ekle
-              setWrongAnswers(prev => [...prev, {
-                 question: customQuestions[currentQIndex].question,
-                 userAnswer: option,
-                 correctAnswer: customQuestions[currentQIndex].answer
-              }]);
-            }
-
-            setTimeout(() => {
-              if (currentQIndex + 1 < customQuestions.length) {
-                setCurrentQIndex(currentQIndex + 1);
-                setSelectedOption(null);
-              } else {
-                setShowTestResult(true);
-              }
-            }, 1000);
-          };
-
-          const resetTestWithoutShuffle = () => {
-            setCurrentQIndex(0);
-            setScore(0);
-            setShowTestResult(false);
-            setSelectedOption(null);
-            setWrongAnswers([]);
-          };
-
-          // Soruları karıştırarak testi yeniden başlat
-          const shuffleAndResetTest = () => {
-            const shuffled = [...customQuestions].sort(() => Math.random() - 0.5);
-            setCustomQuestions(shuffled);
-            resetTestWithoutShuffle();
-          };
-
-          const startTest = () => {
-             shuffleAndResetTest();
-             setView('test');
-             setActiveInfoDeck(false);
-          }
-
-          // --- TEST İÇİN MANUEL SORU EKLEME FONKSİYONLARI ---
-          const handleAddQuestion = (e) => {
-            e.preventDefault();
-            if (!newQText || newQOptions.some(opt => opt.trim() === "")) {
-                alert("Lütfen soruyu ve tüm şıkları doldurun!");
-                return;
-            }
-            const newQuestion = {
-                question: newQText,
-                options: [...newQOptions],
-                answer: newQOptions[newQAnswerIndex]
-            };
-            setCustomQuestions([...customQuestions, newQuestion]);
-            alert("Soru başarıyla kaydedildi!");
-            setNewQText("");
-            setNewQOptions(["", "", "", ""]);
-            setNewQAnswerIndex(0);
-          };
-
-          const handleOptionChange = (index, value) => {
-              const updatedOptions = [...newQOptions];
-              updatedOptions[index] = value;
-              setNewQOptions(updatedOptions);
-          };
-
-          return (
-            <div className="min-h-screen flex flex-col md:flex-row font-sans">
-              
-              {/* SOL MENÜ */}
-              <aside className="w-full md:w-72 bg-white border-r border-slate-200 p-6 flex flex-col h-screen sticky top-0 overflow-hidden">
-                <div className="bg-blue-600 p-5 rounded-2xl text-white mb-6 shadow-lg shadow-blue-100">
-                  <h1 className="font-black text-xl flex items-center gap-2 italic">
-                    <i className="fa-solid fa-bolt"></i> İSG PORTAL
-                  </h1>
-                </div>
-
-                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
-                    {/* MOD BUTONLARI */}
-                    <div className="space-y-2">
-                        <button onClick={() => {setView('cards'); setActiveInfoDeck(false);}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'cards' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-layer-group w-5"></i> Kelime Kartları
-                        </button>
-                        <button onClick={() => {startFlashcardQuiz(); setActiveInfoDeck(false);}} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'quiz' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-brain w-5"></i> Sözlük Pratiği
-                        </button>
-                        <button onClick={() => setView('learn')} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'learn' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-book-open w-5"></i> Konu Öğrenme
-                        </button>
-                        <button onClick={startTest} className={`w-full p-3 rounded-xl flex items-center gap-3 font-bold transition-all ${view === 'test' ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <i className="fa-solid fa-pen-to-square w-5"></i> İngilizce Test
-                        </button>
-                    </div>
-
-                    {/* KATEGORİLER (Sadece Kartlar modunda aktif) */}
-                    {view === 'cards' && (
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest border-t pt-4">KATEGORİLER</p>
-                            {Object.keys(vocabData).map(c => (
-                            <button key={c} onClick={() => { setActiveCat(c); setSearch(""); }}
-                                className={`w-full text-left p-3 rounded-xl text-sm mb-1 transition-all ${activeCat === c ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}>
-                                {c}
-                            </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-              </aside>
-
-              {/* ANA İÇERİK */}
-              <main className="flex-1 p-6 md:p-12">
-                
-                {/* MOD 1: KELİME KARTLARI */}
-                {view === 'cards' && (
-                  <div className="max-w-5xl mx-auto space-y-8">
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="relative group">
-                          <i className="fa-solid fa-magnifying-glass absolute left-5 top-5 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
-                          <input type="text" placeholder="Kelime ara..." value={search} onChange={(e) => setSearch(e.target.value)}
-                            className="w-full h-full p-5 pl-14 rounded-3xl border border-slate-200 shadow-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg" />
-                        </div>
-
-                        <form onSubmit={handleAddWord} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
-                            <div className="flex-1 flex flex-col gap-2">
-                                <input type="text" placeholder="İngilizce (Örn: Safety)" value={newWordEn} onChange={e=>setNewWordEn(e.target.value)} className="w-full p-2 px-3 rounded-xl border border-slate-100 bg-slate-50 text-sm outline-none focus:border-blue-300" required />
-                                <input type="text" placeholder="Türkçe (Örn: Güvenlik)" value={newWordTr} onChange={e=>setNewWordTr(e.target.value)} className="w-full p-2 px-3 rounded-xl border border-slate-100 bg-slate-50 text-sm outline-none focus:border-blue-300" required />
-                            </div>
-                            <button type="submit" className="bg-blue-600 text-white px-6 rounded-2xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                                <i className="fa-solid fa-plus"></i> Ekle
-                            </button>
-                        </form>
-                    </div>
-
-                    <div className="flex items-center justify-between border-b pb-2">
-                        <h2 className="text-xl font-black text-slate-700">{search ? "Arama Sonuçları" : activeCat}</h2>
-                        <span className="text-slate-400 text-sm font-bold">{filteredList.length} Terim</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {filteredList.map((item, i) => (
-                        <FlashCard 
-                          key={i} 
-                          item={item} 
-                          isFlipped={flippedStates[i]} 
-                          onClick={() => setFlippedStates(prev => ({...prev, [i]: !prev[i]}))}
-                          onDelete={() => handleDeleteWord(item.en, item.tr)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* MOD 2: SÖZLÜK ÖĞRENME MODU */}
-                {view === 'quiz' && (
-                  flashcardDeck.length > 0 ? (
-                    <div className="max-w-xl mx-auto space-y-8">
-                      <div className="flex justify-between items-center text-slate-400 font-bold">
-                        <span><i className="fa-solid fa-layer-group"></i> Kalan Kart: {flashcardDeck.length}</span>
-                        <button onClick={() => setView('cards')} className="hover:text-red-500">Çıkış <i className="fa-solid fa-xmark"></i></button>
-                      </div>
-                      <FlashCard item={flashcardDeck[0]} isFlipped={isFlashcardFlipped} onClick={() => setIsFlashcardFlipped(!isFlashcardFlipped)} isLarge={true} />
-                      <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => handleFlashcardNext(false)} className="bg-white border-2 border-red-100 p-6 rounded-3xl text-red-500 font-black hover:bg-red-50 transition-all">BİLEMEDİM</button>
-                        <button onClick={() => handleFlashcardNext(true)} className="bg-white border-2 border-green-100 p-6 rounded-3xl text-green-500 font-black hover:bg-green-50 transition-all">BİLİYORUM</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-20">
-                        <div className="w-24 h-24 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-                            <i className="fa-solid fa-crown"></i>
-                        </div>
-                        <h2 className="text-4xl font-black mb-4 text-slate-800">Şampiyon!</h2>
-                        <p className="text-slate-500 mb-6">Eklediğin yeni kelimeler dahil tüm desteyi bitirdin.</p>
-                        <button onClick={() => setView('cards')} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">Kartlara Geri Dön</button>
-                    </div>
-                  )
-                )}
-
-                {/* MOD 3: KONU ÖĞRENME (100 Bilgi Kartı + Gelişmiş PDF Özetleri) */}
-                {view === 'learn' && (
-                    activeInfoDeck ? (
-                        <div className="max-w-2xl mx-auto space-y-6">
-                            <div className="flex justify-between items-center text-slate-500 font-bold">
-                                <span>100 Bilgi Kartı: Soru {infoIndex + 1} / {INFO_CARDS_DATA.length}</span>
-                                <button onClick={() => {setActiveInfoDeck(false); setInfoIndex(0); setIsInfoFlipped(false);}} className="hover:text-red-500">
-                                    Çıkış <i className="fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
-                            
-                            <div className="perspective-1000 w-full h-96 cursor-pointer" onClick={() => setIsInfoFlipped(!isInfoFlipped)}>
-                                <div className={`relative w-full h-full transition-all duration-500 preserve-3d ${isInfoFlipped ? 'rotate-y-180' : ''}`}>
-                                    {/* Ön Yüz (Soru) */}
-                                    <div className="absolute inset-0 bg-white border-2 border-amber-200 rounded-3xl shadow-md flex flex-col items-center justify-center p-8 backface-hidden">
-                                        <span className="text-amber-500 text-sm font-bold uppercase mb-6 tracking-widest">Soru / Kavram</span>
-                                        <h3 className="text-2xl md:text-3xl font-bold text-slate-800 text-center leading-snug">{INFO_CARDS_DATA[infoIndex].q}</h3>
-                                        <p className="text-slate-400 text-sm mt-8 animate-pulse"><i className="fa-solid fa-rotate"></i> Cevap için tıkla</p>
-                                    </div>
-                                    {/* Arka Yüz (Cevap) */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl shadow-xl flex flex-col items-center justify-center p-8 rotate-y-180 backface-hidden text-white">
-                                        <span className="text-amber-100 text-sm font-bold uppercase mb-6 tracking-widest">Cevap / Açıklama</span>
-                                        <h3 className="text-xl md:text-2xl font-bold text-center leading-relaxed overflow-y-auto custom-scrollbar">{INFO_CARDS_DATA[infoIndex].a}</h3>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between gap-4 mt-4">
-                                <button 
-                                    onClick={() => {if(infoIndex > 0) {setInfoIndex(infoIndex-1); setIsInfoFlipped(false);}}} 
-                                    disabled={infoIndex === 0} 
-                                    className="flex-1 bg-slate-200 p-5 rounded-2xl font-bold text-slate-600 disabled:opacity-50 hover:bg-slate-300 transition-colors"
-                                >
-                                    <i className="fa-solid fa-arrow-left"></i> Önceki
-                                </button>
-                                <button 
-                                    onClick={() => {if(infoIndex < INFO_CARDS_DATA.length - 1) {setInfoIndex(infoIndex+1); setIsInfoFlipped(false);}}} 
-                                    disabled={infoIndex === INFO_CARDS_DATA.length - 1} 
-                                    className="flex-1 bg-amber-500 p-5 rounded-2xl font-bold text-white disabled:opacity-50 hover:bg-amber-600 transition-colors"
-                                >
-                                    Sonraki <i className="fa-solid fa-arrow-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="max-w-5xl mx-auto space-y-8">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-amber-500 pb-4">
-                                <h2 className="text-3xl font-black text-slate-800">Ders Notları Özetleri</h2>
-                                <button onClick={() => setActiveInfoDeck(true)} className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-amber-600 transition-colors flex items-center gap-2">
-                                    <i className="fa-solid fa-layer-group"></i> 100 BİLGİ DESTESİNE BAŞLA
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {LECTURE_DATA.map((lec, i) => (
-                                    <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
-                                            <i className="fa-solid fa-bookmark"></i>
-                                        </div>
-                                        <h3 className="text-xl font-bold text-slate-800 mb-3">{lec.title}</h3>
-                                        <p className="text-slate-600 leading-relaxed text-sm">{lec.content}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )
-                )}
-
-                {/* MOD 4: ENGLISH TEST (QUIZ) ve SORU EKLEME */}
-                {view === 'test' && (
-                    <div className="max-w-3xl mx-auto space-y-8">
-                        
-                        <div className="bg-white p-8 rounded-3xl shadow-md border border-slate-100">
-                            {!showTestResult ? (
-                                <div>
-                                    <div className="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
-                                        <span>Question {currentQIndex + 1} / {customQuestions.length}</span>
-                                        <div className="flex items-center gap-4">
-                                            <button onClick={shuffleAndResetTest} className="text-blue-500 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-lg flex items-center gap-2 transition-colors">
-                                                <i className="fa-solid fa-shuffle"></i> Shuffle
-                                            </button>
-                                            <span className="text-green-500">Score: {score}</span>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-slate-800 mb-8">{customQuestions[currentQIndex].question}</h3>
-                                    <div className="space-y-3">
-                                        {customQuestions[currentQIndex].options.map((opt, i) => {
-                                            let btnClass = "bg-slate-50 border-2 border-slate-100 hover:border-blue-300 hover:bg-blue-50 text-slate-700";
-                                            if (selectedOption) {
-                                                if (opt === customQuestions[currentQIndex].answer) btnClass = "bg-green-100 border-2 border-green-500 text-green-800 font-bold";
-                                                else if (opt === selectedOption) btnClass = "bg-red-100 border-2 border-red-500 text-red-800 font-bold";
-                                                else btnClass = "bg-slate-50 border-2 border-slate-100 opacity-50";
-                                            }
-
-                                            return (
-                                                <button 
-                                                    key={i} 
-                                                    onClick={() => handleAnswerClick(opt)}
-                                                    className={`w-full text-left p-4 rounded-2xl transition-all ${btnClass}`}
-                                                    disabled={selectedOption !== null}
-                                                >
-                                                    {String.fromCharCode(65 + i)}) {opt}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-10">
-                                    <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-                                        <i className="fa-solid fa-trophy"></i>
-                                    </div>
-                                    <h2 className="text-3xl font-black text-slate-800 mb-2">Test Finished!</h2>
-                                    <p className="text-xl text-slate-600 mb-8">Correct Answers: <span className="font-bold text-green-600">{score}</span> / {customQuestions.length}</p>
-                                    
-                                    <div className="flex justify-center gap-4">
-                                        <button onClick={resetTestWithoutShuffle} className="bg-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold shadow-sm hover:bg-slate-300 transition-colors">
-                                            Try Same Order
-                                        </button>
-                                        <button onClick={shuffleAndResetTest} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors">
-                                            <i className="fa-solid fa-shuffle mr-2"></i> Shuffle & Retry
-                                        </button>
-                                    </div>
-
-                                    {/* YANLIŞ YAPILAN SORULAR LİSTESİ */}
-                                    {wrongAnswers.length > 0 && (
-                                        <div className="mt-12 text-left border-t-2 border-red-100 pt-8">
-                                            <h3 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-2">
-                                                <i className="fa-solid fa-circle-exclamation"></i> Yanlış Yapılan Sorular (Mistakes)
-                                            </h3>
-                                            <div className="space-y-4">
-                                                {wrongAnswers.map((item, idx) => (
-                                                    <div key={idx} className="bg-red-50 p-5 rounded-2xl border border-red-100 shadow-sm">
-                                                        <p className="font-bold text-slate-800 mb-3 text-lg">{idx + 1}. {item.question}</p>
-                                                        <p className="text-sm text-red-600 mb-2 font-medium">Your Answer: <span className="font-bold line-through">{item.userAnswer}</span></p>
-                                                        <p className="text-sm text-green-600 font-medium">Correct Answer: <span className="font-bold">{item.correctAnswer}</span></p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="bg-slate-100 p-8 rounded-3xl border border-slate-200">
-                            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <i className="fa-solid fa-circle-plus text-blue-600"></i> Add Your Own Question (Saved in Memory)
-                            </h3>
-                            <form onSubmit={handleAddQuestion} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Question Text (English)</label>
-                                    <textarea required value={newQText} onChange={(e) => setNewQText(e.target.value)} className="w-full p-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24" placeholder="Write the question here..."></textarea>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {newQOptions.map((opt, i) => (
-                                        <div key={i}>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Option {String.fromCharCode(65 + i)}</label>
-                                            <div className="flex items-center gap-2">
-                                                <input type="radio" name="correctAnswer" checked={newQAnswerIndex === i} onChange={() => setNewQAnswerIndex(i)} className="w-5 h-5 text-blue-600 cursor-pointer" title="Select if this is the correct answer" />
-                                                <input required type="text" value={opt} onChange={(e) => handleOptionChange(i, e.target.value)} className="w-full p-3 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder={`Option ${String.fromCharCode(65 + i)}...`} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="text-xs text-slate-500 italic">Select the circle next to the correct option to mark it as the answer.</p>
-                                <button type="submit" className="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-black transition-colors">
-                                    Add Question to the Test
-                                </button>
-                            </form>
-                        </div>
-
-                    </div>
-                )}
-
-              </main>
-            </div>
-          );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+export default App;
