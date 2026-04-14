@@ -1,221 +1,241 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, RotateCcw, Info, Layout } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fizik Flashcards</title>
 
-const INITIAL_FORMULAS = [
-  { id: 1, title: "Sonsuz uzun telin elektrik alanı", formula: "E = \\frac{2k\\lambda}{r}" },
-  { id: 2, title: "Sonsuz geniş yalıtkan levhanın elektrik alanı", formula: "E = \\frac{\\sigma}{2\\epsilon_0}" },
-  { id: 3, title: "Elektriksel Akı", formula: "\\Phi_E = \\int \\vec{E} \\cdot d\\vec{A}" },
-  { id: 4, title: "Gauss Yasası", formula: "\\Phi_E = \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{iç}}{\\epsilon_0}" },
-  { id: 5, title: "İletken yüzeyin hemen dışındaki elektrik alan", formula: "E = \\frac{\\sigma}{\\epsilon_0}" },
-  { id: 6, title: "İki nokta arasında potansiyel fark", formula: "\\Delta V = -\\int_A^B \\vec{E} \\cdot d\\vec{l}" },
-  { id: 7, title: "Elektriksel kuvvetin yaptığı iş", formula: "W = -\\Delta U = -q \\Delta V" },
-  { id: 8, title: "Potansiyelden Elektrik Alana geçiş", formula: "E = -\\nabla V" },
-  { id: 9, title: "Dipol momenti", formula: "p = qd" },
-  { id: 10, title: "Dipol torku", formula: "\\vec{\\tau} = \\vec{p} \\times \\vec{E}" },
-  { id: 11, title: "Dipolün potansiyel enerjisi", formula: "U = -\\vec{p} \\cdot \\vec{E}" },
-  { id: 12, title: "Paralel plakalı kondansatör sığası", formula: "C = \\kappa \\epsilon_0 \\frac{A}{d}" },
-  { id: 13, title: "Silindirik kondansatör sığası", formula: "C = \\frac{2\\pi\\epsilon_0 L}{\\ln(b/a)}" },
-  { id: 14, title: "Küresel kondansatör sığası", formula: "C = 4\\pi\\epsilon_0 \\frac{ab}{b-a}" },
-  { id: 15, title: "İzole küresel kondansatör sığası", formula: "C = \\frac{R}{k}" },
-  { id: 16, title: "Kondansatörde depolanan enerji", formula: "U = \\frac{1}{2} C (\\Delta V)^2" },
-  { id: 17, title: "Elektrik alanın enerji yoğunluğu", formula: "u = \\frac{1}{2} \\kappa \\epsilon_0 E^2" },
-  { id: 18, title: "Akım şiddeti", formula: "I = \\frac{dq}{dt}" },
-  { id: 19, title: "Akım yoğunluğu ve sürüklenme hızı", formula: "J = \\frac{I}{A} = n v_d e" },
-  { id: 20, title: "Direnç formülü", formula: "R = \\rho \\frac{L}{A}" },
-  { id: 21, title: "İletkenlik (Direnç türünden)", formula: "\\sigma = \\frac{1}{\\rho}" },
-  { id: 22, title: "Ohm Yasası (Alan formu)", formula: "E = \\rho J" },
-  { id: 23, title: "Isıya dönüşen enerji hızı (Güç)", formula: "P = I V" },
-  { id: 24, title: "Harcanan toplam enerji", formula: "E = P t" }
-];
+    <script src="https://cdn.tailwindcss.com"></script>
 
-// Helper to render LaTeX using simple HTML/CSS for common physics symbols 
-const FormulaDisplay = ({ formula }) => {
-  useEffect(() => {
-    if (window.renderMathInElement) {
-        window.renderMathInElement(document.body);
-    }
-  }, [formula]);
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 
-  return (
-    <div className="text-2xl md:text-3xl font-serif text-center break-words px-4">
-      {`$$ ${formula} $$`}
-    </div>
-  );
-};
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-const App = () => {
-  const [deck, setDeck] = useState([...INITIAL_FORMULAS]);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const [stats, setStats] = useState({ correct: 0, wrong: 0 });
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
-  // Load KaTeX for better formula rendering
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css';
-    document.head.appendChild(link);
-
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js';
-    script.async = true;
-    script.onload = () => {
-        const autoRenderScript = document.createElement('script');
-        autoRenderScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js';
-        autoRenderScript.async = true;
-        autoRenderScript.onload = () => {
-            window.renderMathInElement(document.body, {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false}
-                ]
-            });
-        };
-        document.head.appendChild(autoRenderScript);
-    };
-    document.head.appendChild(script);
-  }, []);
-
-  const handleCorrect = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      const newDeck = [...deck];
-      newDeck.shift();
-      setDeck(newDeck);
-      setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
-      if (newDeck.length === 0) setFinished(true);
-    }, 150);
-  };
-
-  const handleWrong = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      const newDeck = [...deck];
-      const currentCard = newDeck.shift();
-      
-      const targetIndex = Math.min(4, newDeck.length);
-      newDeck.splice(targetIndex, 0, currentCard);
-      
-      setDeck(newDeck);
-      setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
-    }, 150);
-  };
-
-  const resetGame = () => {
-    setDeck([...INITIAL_FORMULAS].sort(() => Math.random() - 0.5));
-    setFinished(false);
-    setIsFlipped(false);
-    setStats({ correct: 0, wrong: 0 });
-  };
-
-  if (finished) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-800">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-6">
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle size={48} />
-          </div>
-          <h1 className="text-3xl font-bold">Tebrikler!</h1>
-          <p className="text-slate-600">Bütün formülleri başarıyla tamamladın.</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-50 p-4 rounded-xl">
-              <div className="text-sm text-slate-500 uppercase font-semibold">Doğru</div>
-              <div className="text-2xl font-bold text-green-600">{stats.correct}</div>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-xl">
-              <div className="text-sm text-slate-500 uppercase font-semibold">Yanlış</div>
-              <div className="text-2xl font-bold text-red-500">{stats.wrong}</div>
-            </div>
-          </div>
-          <button 
-            onClick={resetGame}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
-          >
-            <RotateCcw size={20} /> Yeniden Başla
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const currentCard = deck[0];
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 md:p-8 font-sans text-slate-800">
-      <div className="w-full max-w-xl flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2 text-indigo-900">
-            <Layout className="text-indigo-600" size={24} />
-            Fizik Flashcards
-          </h1>
-          <p className="text-sm text-slate-500">Elektrik ve Manyetizma</p>
-        </div>
-        <div className="text-right">
-          <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
-            {deck.length} kart kaldı
-          </span>
-        </div>
-      </div>
-
-      <div className="w-full max-w-xl h-2 bg-slate-200 rounded-full mb-12 overflow-hidden">
-        <div 
-          className="h-full bg-indigo-600 transition-all duration-500"
-          style={{ width: `${((INITIAL_FORMULAS.length - deck.length) / INITIAL_FORMULAS.length) * 100}%` }}
-        ></div>
-      </div>
-
-      <div className="relative w-full max-w-md perspective-1000 h-96 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
-        <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-          <div className="absolute inset-0 backface-hidden bg-white rounded-3xl shadow-2xl border-b-4 border-indigo-200 flex flex-col items-center justify-center p-8 text-center group">
-            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-400 transition-colors">
-              <Info size={24} />
-            </div>
-            <p className="text-sm text-indigo-500 font-bold uppercase tracking-wider mb-4">Soru</p>
-            <h2 className="text-2xl md:text-3xl font-semibold leading-tight">
-              {currentCard?.title}
-            </h2>
-            <p className="mt-8 text-slate-400 text-sm italic">Cevabı görmek için tıkla</p>
-          </div>
-
-          <div className="absolute inset-0 backface-hidden bg-indigo-900 rounded-3xl shadow-2xl rotate-y-180 flex flex-col items-center justify-center p-8 text-white border-b-4 border-indigo-950">
-            <p className="text-sm text-indigo-300 font-bold uppercase tracking-wider mb-8">Formül</p>
-            <div className="w-full bg-white/10 p-6 rounded-2xl backdrop-blur-sm">
-              <FormulaDisplay formula={currentCard?.formula} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={`mt-12 flex gap-6 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <button 
-          onClick={(e) => { e.stopPropagation(); handleWrong(); }}
-          className="flex flex-col items-center gap-2 group"
-        >
-          <div className="w-16 h-16 bg-white border-2 border-red-200 text-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-red-500 group-hover:text-white transition-all transform active:scale-95">
-            <XCircle size={32} />
-          </div>
-          <span className="text-sm font-bold text-slate-600">Yanlış</span>
-        </button>
-
-        <button 
-          onClick={(e) => { e.stopPropagation(); handleCorrect(); }}
-          className="flex flex-col items-center gap-2 group"
-        >
-          <div className="w-16 h-16 bg-white border-2 border-green-200 text-green-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-green-500 group-hover:text-white transition-all transform active:scale-95">
-            <CheckCircle size={32} />
-          </div>
-          <span className="text-sm font-bold text-slate-600">Doğru</span>
-        </button>
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
+    <style>
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-      `}} />
-    </div>
-  );
-};
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-export default App;
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // İkonları dışarıdan import edemediğimiz için SVG olarak bileşenleştiriyoruz
+        const CheckCircle = ({ size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        );
+        const XCircle = ({ size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+        );
+        const RotateCcw = ({ size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+        );
+        const Info = ({ size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        );
+        const Layout = ({ size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        );
+
+        const INITIAL_FORMULAS = [
+          { id: 1, title: "Sonsuz uzun telin elektrik alanı", formula: "E = \\frac{2k\\lambda}{r}" },
+          { id: 2, title: "Sonsuz geniş yalıtkan levhanın elektrik alanı", formula: "E = \\frac{\\sigma}{2\\epsilon_0}" },
+          { id: 3, title: "Elektriksel Akı", formula: "\\Phi_E = \\int \\vec{E} \\cdot d\\vec{A}" },
+          { id: 4, title: "Gauss Yasası", formula: "\\Phi_E = \\oint \\vec{E} \\cdot d\\vec{A} = \\frac{q_{iç}}{\\epsilon_0}" },
+          { id: 5, title: "İletken yüzeyin hemen dışındaki elektrik alan", formula: "E = \\frac{\\sigma}{\\epsilon_0}" },
+          { id: 6, title: "İki nokta arasında potansiyel fark", formula: "\\Delta V = -\\int_A^B \\vec{E} \\cdot d\\vec{l}" },
+          { id: 7, title: "Elektriksel kuvvetin yaptığı iş", formula: "W = -\\Delta U = -q \\Delta V" },
+          { id: 8, title: "Potansiyelden Elektrik Alana geçiş", formula: "E = -\\nabla V" },
+          { id: 9, title: "Dipol momenti", formula: "p = qd" },
+          { id: 10, title: "Dipol torku", formula: "\\vec{\\tau} = \\vec{p} \\times \\vec{E}" },
+          { id: 11, title: "Dipolün potansiyel enerjisi", formula: "U = -\\vec{p} \\cdot \\vec{E}" },
+          { id: 12, title: "Paralel plakalı kondansatör sığası", formula: "C = \\kappa \\epsilon_0 \\frac{A}{d}" },
+          { id: 13, title: "Silindirik kondansatör sığası", formula: "C = \\frac{2\\pi\\epsilon_0 L}{\\ln(b/a)}" },
+          { id: 14, title: "Küresel kondansatör sığası", formula: "C = 4\\pi\\epsilon_0 \\frac{ab}{b-a}" },
+          { id: 15, title: "İzole küresel kondansatör sığası", formula: "C = \\frac{R}{k}" },
+          { id: 16, title: "Kondansatörde depolanan enerji", formula: "U = \\frac{1}{2} C (\\Delta V)^2" },
+          { id: 17, title: "Elektrik alanın enerji yoğunluğu", formula: "u = \\frac{1}{2} \\kappa \\epsilon_0 E^2" },
+          { id: 18, title: "Akım şiddeti", formula: "I = \\frac{dq}{dt}" },
+          { id: 19, title: "Akım yoğunluğu ve sürüklenme hızı", formula: "J = \\frac{I}{A} = n v_d e" },
+          { id: 20, title: "Direnç formülü", formula: "R = \\rho \\frac{L}{A}" },
+          { id: 21, title: "İletkenlik (Direnç türünden)", formula: "\\sigma = \\frac{1}{\\rho}" },
+          { id: 22, title: "Ohm Yasası (Alan formu)", formula: "E = \\rho J" },
+          { id: 23, title: "Isıya dönüşen enerji hızı (Güç)", formula: "P = I V" },
+          { id: 24, title: "Harcanan toplam enerji", formula: "E = P t" }
+        ];
+
+        const FormulaDisplay = ({ formula }) => {
+          const containerRef = useRef(null);
+
+          useEffect(() => {
+            // KaTeX yüklenmişse ve div elementimiz hazıra formülü render et
+            if (window.renderMathInElement && containerRef.current) {
+                window.renderMathInElement(containerRef.current, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+          }, [formula]);
+
+          return (
+            <div ref={containerRef} className="text-2xl md:text-3xl font-serif text-center break-words px-4">
+              {`$$ ${formula} $$`}
+            </div>
+          );
+        };
+
+        const App = () => {
+          const [deck, setDeck] = useState([...INITIAL_FORMULAS]);
+          const [isFlipped, setIsFlipped] = useState(false);
+          const [finished, setFinished] = useState(false);
+          const [stats, setStats] = useState({ correct: 0, wrong: 0 });
+
+          const handleCorrect = () => {
+            setIsFlipped(false);
+            setTimeout(() => {
+              const newDeck = [...deck];
+              newDeck.shift();
+              setDeck(newDeck);
+              setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+              if (newDeck.length === 0) setFinished(true);
+            }, 150);
+          };
+
+          const handleWrong = () => {
+            setIsFlipped(false);
+            setTimeout(() => {
+              const newDeck = [...deck];
+              const currentCard = newDeck.shift();
+              const targetIndex = Math.min(4, newDeck.length);
+              newDeck.splice(targetIndex, 0, currentCard);
+              setDeck(newDeck);
+              setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
+            }, 150);
+          };
+
+          const resetGame = () => {
+            setDeck([...INITIAL_FORMULAS].sort(() => Math.random() - 0.5));
+            setFinished(false);
+            setIsFlipped(false);
+            setStats({ correct: 0, wrong: 0 });
+          };
+
+          if (finished) {
+            return (
+              <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-800 font-sans">
+                <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-6">
+                  <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle size={48} />
+                  </div>
+                  <h1 className="text-3xl font-bold">Tebrikler!</h1>
+                  <p className="text-slate-600">Bütün formülleri başarıyla tamamladın.</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 p-4 rounded-xl">
+                      <div className="text-sm text-slate-500 uppercase font-semibold">Doğru</div>
+                      <div className="text-2xl font-bold text-green-600">{stats.correct}</div>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-xl">
+                      <div className="text-sm text-slate-500 uppercase font-semibold">Yanlış</div>
+                      <div className="text-2xl font-bold text-red-500">{stats.wrong}</div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={resetGame}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <RotateCcw size={20} /> Yeniden Başla
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          const currentCard = deck[0];
+
+          return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 md:p-8 font-sans text-slate-800">
+              <div className="w-full max-w-xl flex justify-between items-center mb-8">
+                <div>
+                  <h1 className="text-xl font-bold flex items-center gap-2 text-indigo-900">
+                    <Layout size={24} className="text-indigo-600" />
+                    Fizik Flashcards
+                  </h1>
+                  <p className="text-sm text-slate-500">Elektrik ve Manyetizma</p>
+                </div>
+                <div className="text-right">
+                  <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
+                    {deck.length} kart kaldı
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full max-w-xl h-2 bg-slate-200 rounded-full mb-12 overflow-hidden">
+                <div 
+                  className="h-full bg-indigo-600 transition-all duration-500"
+                  style={{ width: `${((INITIAL_FORMULAS.length - deck.length) / INITIAL_FORMULAS.length) * 100}%` }}
+                ></div>
+              </div>
+
+              <div className="relative w-full max-w-md perspective-1000 h-96 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                  <div className="absolute inset-0 backface-hidden bg-white rounded-3xl shadow-2xl border-b-4 border-indigo-200 flex flex-col items-center justify-center p-8 text-center group">
+                    <div className="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-400 transition-colors">
+                      <Info size={24} />
+                    </div>
+                    <p className="text-sm text-indigo-500 font-bold uppercase tracking-wider mb-4">Soru</p>
+                    <h2 className="text-2xl md:text-3xl font-semibold leading-tight">
+                      {currentCard?.title}
+                    </h2>
+                    <p className="mt-8 text-slate-400 text-sm italic">Cevabı görmek için tıkla</p>
+                  </div>
+
+                  <div className="absolute inset-0 backface-hidden bg-indigo-900 rounded-3xl shadow-2xl rotate-y-180 flex flex-col items-center justify-center p-8 text-white border-b-4 border-indigo-950">
+                    <p className="text-sm text-indigo-300 font-bold uppercase tracking-wider mb-8">Formül</p>
+                    <div className="w-full bg-white/10 p-6 rounded-2xl backdrop-blur-sm">
+                      <FormulaDisplay formula={currentCard?.formula} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`mt-12 flex gap-6 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleWrong(); }}
+                  className="flex flex-col items-center gap-2 group"
+                >
+                  <div className="w-16 h-16 bg-white border-2 border-red-200 text-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-red-500 group-hover:text-white transition-all transform active:scale-95">
+                    <XCircle size={32} />
+                  </div>
+                  <span className="text-sm font-bold text-slate-600">Yanlış</span>
+                </button>
+
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleCorrect(); }}
+                  className="flex flex-col items-center gap-2 group"
+                >
+                  <div className="w-16 h-16 bg-white border-2 border-green-200 text-green-500 rounded-full flex items-center justify-center shadow-lg group-hover:bg-green-500 group-hover:text-white transition-all transform active:scale-95">
+                    <CheckCircle size={32} />
+                  </div>
+                  <span className="text-sm font-bold text-slate-600">Doğru</span>
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
